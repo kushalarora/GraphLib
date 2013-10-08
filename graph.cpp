@@ -64,6 +64,12 @@ class Graph {
 
             public:
             Node(int value, int weight, string label);
+            int getWeight() {return weight;}
+            int getValue() {return value;}
+            Node* getNext() {return next;}
+            string getLabel() {return label;}
+            void setWeight(int wght) {weight = wght;}
+            void setNext(Node* nxt) {next = nxt;}
 
         };
         Graph();
@@ -75,10 +81,14 @@ class Graph {
         Node* insertNode(string label, int weight);
         Node* insertNode(string label);
         Node* insertNode(int value, int weight, string label);
-        void createEdge(Node& V1, Node& V2);
-        void createEdge(Node& V1, Node& V2, int weight);
+        void createEdge(Node* V1, Node* V2);
+        void createEdge(Node* V1, Node* V2, int weight);
         void createEdge(string label1, string label2);
         void createEdge(string label1, string label2, int weight);
+        inline bool isWeighted() {return weighted;}
+        inline bool isDirected() {return directed;}
+        Node* searchNodeByLabel(string label);
+        void printGraph();
     private:
         int nVertices;
         int nEdges;
@@ -86,6 +96,8 @@ class Graph {
         bool weighted;
         int degree[MAXV];
         Node *edgeNode[MAXV];
+        void printNode(Node* node);
+        void printEdge(Node* edgeNode);
 };
 Graph::Graph(bool dirctd, bool wghtd) {
     nVertices = 0;
@@ -110,9 +122,9 @@ Node::Node(int val, int wght, string lbl) {
 }
 
 bool Node::operator==(Node* node2) {
-    if (this == node2)
+    if (this == node2)  // if pointer matches, return true
         return true;
-    if (this->label.length() > 0 && node2->label.length() > 0)
+    if (this->label.length() > 0 && node2->label.length() > 0)  // if label is defined match that.
         return this->label == node2->label;
     return false;
 };
@@ -150,7 +162,88 @@ Node* Graph::insertNode(string label, int weight) {
 Node* Graph::insertNode(string label) {
     insertNode(new Node(0, 0, label));
 }
+Node* Graph::searchNodeByLabel(string label) {
+    if (label.length() == 0)
+        return NULL;
+    Node* node = NULL;
+    for (int i = 0 ; i < nVertices; i++) {
+        if (label == edgeNode[i]->getLabel())
+            break;
+    return node;
+    }
+}
+void Graph::createEdge(Node *V1, Node *V2, int weight) {
+    int i;
+    for (i = -1; i < nVertices - 1; i++) {
+        if (edgeNode[i + 1] == V1)
+            break;
+    }
+    if (i > -1) {
+        Node* temp = edgeNode[i + 1];
+        while(temp->getNext() != NULL) {
+            // if V2 already present do nothing.
+            if (temp->getNext() == V2)
+                return;
+            temp = temp->getNext();
+        }
+        // insert node at the end.
+        temp->setNext(V2);
+        if (isWeighted())
+            V2->setWeight(weight);
 
+        degree[i + 1]++;
+        nEdges++;
+    }
+}
+
+void Graph::createEdge(Node *V1, Node* V2) {
+    createEdge(V1, V2, 0);
+}
+
+void Graph::createEdge(string label1, string label2, int weight) {
+    Node* node1 = searchNodeByLabel(label1);
+    Node* node2 = searchNodeByLabel(label2);
+    if (node1 == NULL || node2 == NULL)
+        return;
+    createEdge(node1, node2, weight);
+}
+
+void Graph::createEdge(string label1, string label2) {
+    createEdge(label1, label2, 0);
+}
+
+void Graph::printGraph() {
+    for (int i = 0; i < nVertices; i++) {
+        printNode(edgeNode[i]);
+        Node* tmp = edgeNode[i];
+        while (tmp->getNext() != NULL) {
+            printEdge(tmp->getNext());
+            printNode(tmp->getNext());
+            tmp = tmp->getNext();
+        }
+        cout<<"\n"<<"\n";
+    }
+}
+
+void Graph::printNode(Node* node) {
+    if (node == NULL)
+        return;
+    cout << "( ";
+    if (node->getLabel().length() > 0)
+        cout << node->getLabel() << " ";
+     if (node->getValue() > 0)
+         cout << node->getValue() << " ";
+     cout << ")";
+}
+
+void Graph::printEdge(Node* node) {
+    if (node == NULL)
+        return;
+    cout << isDirected() ? "<-" : "-";
+    if (isWeighted())
+        cout << node->getWeight();
+    cout << "->";
+}
 int main(int argc, char *argv[]) {
     if (argc > 1)
         return -1;
