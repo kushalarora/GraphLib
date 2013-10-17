@@ -27,7 +27,7 @@
  *          Faster queries like "is (i,j) in G, faster updates, deletion
  *          Excessive space for sparse graph. Used only for dense graph.
  *
- *      2. Adhacency List
+ *      2. Adjacency List
  *          Used all the time as most real life graphs are sparse.
  *          Linked representation of graph.
  *          An array of nodes containing all vertices.
@@ -48,33 +48,45 @@
 
 #include<iostream>
 #include<string>
+#include<stdlib.h>     // for rand()
+#include<time.h>
+#include "../cpp/utils.hpp"
+#include<assert.h>
 
 using namespace std;
 const int MAXV = 100000;
 static bool DEBUG;
 
+class Node {
+    string label;   // labels are unique
+    int value;      // need not be unique
+    int weight;
+    Node* next;     // linked list of edges.
+    bool operator ==(Node* node2);
+    int adj_index;
+
+    public:
+        Node() {}
+        Node(int value, int weight, string label);
+        Node(Node* node);
+        int getValue() {return value;}
+        void setValue(int val) {value = val;}
+        Node* getNext() {return next;}
+        void setNext(Node* nxt) {next = nxt;}
+        int getWeight() {return weight;}
+        void setWeight(int wght) {weight = wght;}
+        string getLabel() {return label;}
+        void setLabel(string lbl) {label = lbl;}
+        void setAdjecencyIndex(int val) {adj_index = val;}
+        int  getAdjecencyIndex() {return adj_index;}
+
+};
 class Graph {
     public:
-        class Node {
-            string label;   // labels are unique
-            int value;      // need not be unique
-            int weight;
-            Node* next;     // linked list of edges.
-            bool operator ==(Node* node2);
-
-            public:
-            Node(int value, int weight, string label);
-            int getWeight() {return weight;}
-            int getValue() {return value;}
-            Node* getNext() {return next;}
-            string getLabel() {return label;}
-            void setWeight(int wght) {weight = wght;}
-            void setNext(Node* nxt) {next = nxt;}
-
-        };
         Graph();
-        Graph(bool directed, bool weighted);
-        void insertNode(Node* node);
+        ~Graph();
+        Graph(bool directed, bool weighted, bool labelled, bool valued);
+        Node* insertNode(Node* node);
         Node* insertNode(int value);
         Node* insertNode(int value, int weight);
         Node* insertNode(int value, string label);
@@ -87,19 +99,26 @@ class Graph {
         void createEdge(string label1, string label2, int weight);
         inline bool isWeighted() {return weighted;}
         inline bool isDirected() {return directed;}
+        inline bool isLabelled() {return labelled;}
+        inline bool isValued() {return valued;}
         Node* searchNodeByLabel(string label);
         void printGraph();
+        void createRandomGraph(int nVertices);
+        void createRandomGraph(int nVertices, float density);
     private:
         int nVertices;
         int nEdges;
         bool directed;
         bool weighted;
+        bool labelled;
+        bool valued;
         int degree[MAXV];
         Node *edgeNode[MAXV];
         void printNode(Node* node);
         void printEdge(Node* edgeNode);
+        string createRandomLabels(int nVertices);
 };
-Graph::Graph(bool dirctd, bool wghtd) {
+Graph::Graph(bool dirctd, bool wghtd, bool lbled, bool valed) {
     nVertices = 0;
     nEdges = 0;
     for (int i = 0; i < MAXV; i++) {
@@ -108,19 +127,30 @@ Graph::Graph(bool dirctd, bool wghtd) {
     }
     directed = dirctd;
     weighted = wghtd;
+    labelled = lbled;
+    valued = valed;
 }
 Graph::Graph() {
-    Graph(false, false);
+    Graph(false, false, false, false);
 }
 
-typedef Graph::Node Node;
 Node::Node(int val, int wght, string lbl) {
     value = val;
     weight = wght;
     label = lbl;
     next = NULL;
+    adj_index = -1;
 }
 
+Node::Node(Node* node) {
+    value = node->getValue();
+    weight = node->getWeight();
+    label = node->getLabel();
+    next = NULL;
+    adj_index = node->getAdjecencyIndex();
+}
+
+// nodes are equal if either they are same or have same label.
 bool Node::operator==(Node* node2) {
     if (this == node2)  // if pointer matches, return true
         return true;
@@ -129,71 +159,105 @@ bool Node::operator==(Node* node2) {
     return false;
 };
 
-void Graph::insertNode(Node* node) {
+Node* Graph::insertNode(Node* node) {
     int i;
     for (i = 0; i < nVertices; i++) {
         if (edgeNode[i] == node)
-            return;
+            // node already present
+            return node;
     }
     edgeNode[i] = node;
     nVertices += 1;
     degree[i] = 0;
+    node->setAdjecencyIndex(i);
+    return node;
 }
 Node* Graph::insertNode(int value) {
-    insertNode(new Node(value, 0, NULL));
+    assert(isValued());
+    return insertNode(new Node(value, 0, NULL));
 }
 
 Node* Graph::insertNode(int value, int weight) {
-    insertNode(new Node(value, weight, NULL));
+    assert(isValued() && isWeighted());
+    return insertNode(new Node(value, weight, NULL));
 }
 
 Node* Graph::insertNode(int value, int weight, string label) {
-    insertNode(new Node(value, weight, label));
+    assert(isValued() && isWeighted() && isLabelled());
+    return insertNode(new Node(value, weight, label));
 }
 
 Node* Graph::insertNode(int value, string label) {
-    insertNode(new Node(value, 0, label));
+    assert(isValued() && isLabelled());
+    return insertNode(new Node(value, 0, label));
 }
 
 Node* Graph::insertNode(string label, int weight) {
-    insertNode(new Node(0, weight, label));
+    assert(isLabelled() && isValued());
+    return insertNode(new Node(0, weight, label));
 }
 
 Node* Graph::insertNode(string label) {
-    insertNode(new Node(0, 0, label));
+    assert(isLabelled());
+    return insertNode(new Node(0, 0, label));
 }
+
 Node* Graph::searchNodeByLabel(string label) {
-    if (label.length() == 0)
-        return NULL;
-    Node* node = NULL;
-    for (int i = 0 ; i < nVertices; i++) {
-        if (label == edgeNode[i]->getLabel())
-            break;
-    return node;
+    assert(isLabelled());
+    if (label.length() > 0) {
+        for (int i = 0 ; i < nVertices; i++) {
+            if (label == edgeNode[i]->getLabel()) {
+                return edgeNode[i];
+            }
+        }
     }
+    return NULL;
 }
+
 void Graph::createEdge(Node *V1, Node *V2, int weight) {
     int i;
-    for (i = -1; i < nVertices - 1; i++) {
-        if (edgeNode[i + 1] == V1)
-            break;
+    // ensure that both nodes were inserted into graph.
+    int idx1 = V1->getAdjecencyIndex();
+    int idx2 = V2->getAdjecencyIndex();
+    assert(idx1 != -1);
+    assert(idx2 != -1);
+    int idx;
+
+    Node* temp;
+    // inserting edge to v2 in v1
+    temp = V1;
+    idx = idx1;
+    Node* newNode;
+    while(temp->getNext() != NULL) {
+        // if V2 already present do nothing.
+        if (temp->getNext() == V2)
+            return;
+        temp = temp->getNext();
     }
-    if (i > -1) {
-        Node* temp = edgeNode[i + 1];
+    // insert node at the end.
+    newNode = new Node(V2);
+    temp->setNext(newNode);
+    if (isWeighted())
+        newNode->setWeight(weight);
+    degree[idx]++;
+    if (!isDirected()) {
+        // if undirected, insert corresponding edge in v2.
+        temp = V2;
+        idx = idx2;
         while(temp->getNext() != NULL) {
-            // if V2 already present do nothing.
-            if (temp->getNext() == V2)
+            // if V1 already present do nothing.
+            if (temp->getNext() == V1)
                 return;
             temp = temp->getNext();
         }
         // insert node at the end.
-        temp->setNext(V2);
+        newNode = new Node(V1);
+        temp->setNext(newNode);
         if (isWeighted())
-            V2->setWeight(weight);
-
-        degree[i + 1]++;
-        nEdges++;
+            newNode->setWeight(weight);
+        degree[idx]++;
     }
+    nEdges++;
 }
 
 void Graph::createEdge(Node *V1, Node* V2) {
@@ -229,9 +293,9 @@ void Graph::printNode(Node* node) {
     if (node == NULL)
         return;
     cout << "( ";
-    if (node->getLabel().length() > 0)
+    if (isLabelled() && node->getLabel().length() > 0)
         cout << node->getLabel() << " ";
-     if (node->getValue() > 0)
+     if (isValued() && node->getValue() > 0)
          cout << node->getValue() << " ";
      cout << ")";
 }
@@ -239,14 +303,73 @@ void Graph::printNode(Node* node) {
 void Graph::printEdge(Node* node) {
     if (node == NULL)
         return;
-    cout << isDirected() ? "<-" : "-";
+    cout << (isDirected() ? "--" : "<--");
     if (isWeighted())
         cout << node->getWeight();
-    cout << "->";
+    cout << "-->";
 }
+
+
+string Graph::createRandomLabels(int nVertices) {
+    int len = nVertices < 10 ? 2 : nVertices < 100 ? 4 : nVertices < 1000 ? 5 : 8;
+    char sbuilder[len];
+    for (int i = 0; i < len; i++) {
+        sbuilder[i] = 'a' + rand() % 26;
+    }
+    string str = string(sbuilder, len);
+    return str;
+}
+
+void Graph::createRandomGraph(int nVertices, float density) {
+    srand(time(NULL));
+    if (nVertices < 1)
+        return;
+    for (int i = 0; i < nVertices; i++) {
+        Node* node = new Node();
+        if (isLabelled())
+            node->setLabel(createRandomLabels(nVertices));
+
+        if (isValued())
+            node->setValue(rand() % nVertices + 1);
+        insertNode(node);
+    }
+    int nEdges = nVertices * (density > 0.0 ? density * nVertices : (rand() % nVertices));
+    cout<<"\nMaking "<<nEdges<<" Edges\n";
+    for (long i = 0; i < nEdges; i++) {
+        int idx1 = rand() % nVertices;
+        int idx2 = rand() % nVertices;
+
+        // ensures that there are no self loops
+        while (idx1 == idx2)
+            idx2 = rand() % nVertices;
+        createEdge(edgeNode[idx1], edgeNode[idx2], (isWeighted() ? rand() % 100 : 0));
+        //printNode(edgeNode[idx1]);printEdge(edgeNode[idx2]);printNode(edgeNode[idx2]);
+    }
+
+}
+
+void Graph::createRandomGraph(int nVertices) {
+    createRandomGraph(nVertices, 0.0);
+}
+
+Graph::~Graph() {
+    for (int i = 0; i < nVertices; i++) {
+        Node* tmp = edgeNode[i];
+        Node* tmp2;
+        while(tmp != NULL) {
+            tmp2 = tmp->getNext();
+            delete tmp;
+            tmp = tmp2;
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (argc > 1)
         return -1;
     DEBUG = argc == 1 && argv[0][0] - '1' > 0;
+    Graph g = Graph(false, true, true, true);
+    g.createRandomGraph(10);
+    g.printGraph();
     return 0;
 }
