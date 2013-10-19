@@ -50,18 +50,20 @@
 #include<string>
 #include<stdlib.h>     // for rand()
 #include<time.h>
-#include "../cpp/utils.hpp"
 #include<assert.h>
 
 using namespace std;
 const int MAXV = 100000;
 static bool DEBUG;
 
+// forward declaration to resolve circular dependency.
+class Edge;
+
 class Node {
     string label;   // labels are unique
     int value;      // need not be unique
     int weight;
-    Node* next;     // linked list of edges.
+    Edge* edge_list;     // linked list of edges.
     bool operator ==(Node* node2);
     int adj_index;
 
@@ -71,8 +73,8 @@ class Node {
         Node(Node* node);
         int getValue() {return value;}
         void setValue(int val) {value = val;}
-        Node* getNext() {return next;}
-        void setNext(Node* nxt) {next = nxt;}
+        Edge* getEdgeList() {return edge_list;}
+        Edge* setEdgeList(Edge* edge) {edge_list = edge;}
         int getWeight() {return weight;}
         void setWeight(int wght) {weight = wght;}
         string getLabel() {return label;}
@@ -81,6 +83,84 @@ class Node {
         int  getAdjecencyIndex() {return adj_index;}
 
 };
+
+Node::Node(int val, int wght, string lbl) {
+    value = val;
+    weight = wght;
+    label = lbl;
+    edge_list = NULL;
+    adj_index = -1;
+}
+
+Node::Node(Node* node) {
+    value = node->getValue();
+    weight = node->getWeight();
+    label = node->getLabel();
+    edge_list = NULL;
+    adj_index = node->getAdjecencyIndex();
+}
+
+// nodes are equal if either they are same or have same label.
+bool Node::operator==(Node* node2) {
+    if (this == node2)  // if pointer matches, return true
+        return true;
+    if (this->label.length() > 0 && node2->label.length() > 0)  // if label is defined match that.
+        return this->label == node2->label;
+    return false;
+};
+
+class Edge {
+    Node* node1;
+    Node* node2;
+    bool is_directed;
+    float weight;
+    Edge* next;
+    const static float DEFAULT_WEIGHT = 0.0f;
+    public:
+        Edge(Node* n1, Node* n2);
+        Edge(Node* n1, Node* n2, bool is_directed, float weight);
+        Edge(Node* n1, Node* n2, bool is_directed);
+        Edge(Node* n1, Node* n2, float weight);
+        Edge* getNext() {return next;}
+        void setNext(Edge* next) {this->next = next;}
+        Node* getCurrentNode() {return node1;}
+        Node* getOtherNode() { return node2;}
+        bool isDirected() {return is_directed;}
+        float getWeight() {return weight;}
+        bool operator ==(Edge* edge2);
+};
+
+Edge::Edge(Node* n1, Node* n2, bool is_directed, float weight) {
+    node1 = n1;
+    node2 = n2;
+    this->is_directed = is_directed;
+    this->weight = weight;
+    this->next = NULL;
+}
+
+Edge::Edge(Node* n1, Node* n2) {
+    Edge(n1, n2, false, DEFAULT_WEIGHT);
+}
+
+Edge::Edge(Node* n1, Node* n2, bool is_directed) {
+    Edge(n1, n2, is_directed, DEFAULT_WEIGHT);
+}
+
+Edge::Edge(Node* n1, Node* n2, float weight) {
+    Edge(n1, n2, false, weight);
+}
+
+bool Edge::operator ==(Edge* edge2) {
+    if (edge2 == NULL)
+        return false;
+
+    if (this->getCurrentNode() == edge2->getCurrentNode() &&
+            this->getOtherNode() == edge2->getOtherNode() &&
+                (this->getWeight() == edge2->getWeight()))
+            return true;
+    return false;
+}
+
 class Graph {
     public:
         Graph();
@@ -94,9 +174,9 @@ class Graph {
         Node* insertNode(string label);
         Node* insertNode(int value, int weight, string label);
         void createEdge(Node* V1, Node* V2);
-        void createEdge(Node* V1, Node* V2, int weight);
+        void createEdge(Node* V1, Node* V2, float weight);
         void createEdge(string label1, string label2);
-        void createEdge(string label1, string label2, int weight);
+        void createEdge(string label1, string label2, float weight);
         inline bool isWeighted() {return weighted;}
         inline bool isDirected() {return directed;}
         inline bool isLabelled() {return labelled;}
@@ -115,9 +195,10 @@ class Graph {
         int degree[MAXV];
         Node *edgeNode[MAXV];
         void printNode(Node* node);
-        void printEdge(Node* edgeNode);
+        void printEdge(Edge* edge);
         string createRandomLabels(int nVertices);
 };
+
 Graph::Graph(bool dirctd, bool wghtd, bool lbled, bool valed) {
     nVertices = 0;
     nEdges = 0;
@@ -134,30 +215,6 @@ Graph::Graph() {
     Graph(false, false, false, false);
 }
 
-Node::Node(int val, int wght, string lbl) {
-    value = val;
-    weight = wght;
-    label = lbl;
-    next = NULL;
-    adj_index = -1;
-}
-
-Node::Node(Node* node) {
-    value = node->getValue();
-    weight = node->getWeight();
-    label = node->getLabel();
-    next = NULL;
-    adj_index = node->getAdjecencyIndex();
-}
-
-// nodes are equal if either they are same or have same label.
-bool Node::operator==(Node* node2) {
-    if (this == node2)  // if pointer matches, return true
-        return true;
-    if (this->label.length() > 0 && node2->label.length() > 0)  // if label is defined match that.
-        return this->label == node2->label;
-    return false;
-};
 
 Node* Graph::insertNode(Node* node) {
     int i;
@@ -214,48 +271,34 @@ Node* Graph::searchNodeByLabel(string label) {
     return NULL;
 }
 
-void Graph::createEdge(Node *V1, Node *V2, int weight) {
-    int i;
+void Graph::createEdge(Node *V1, Node *V2, float weight) {
+    Node* nodeArr[2] = {V1, V2};
+    Edge* newEdge;
+    Edge* temp;
+    int i = 0, idx = 0;
     // ensure that both nodes were inserted into graph.
-    int idx1 = V1->getAdjecencyIndex();
-    int idx2 = V2->getAdjecencyIndex();
-    assert(idx1 != -1);
-    assert(idx2 != -1);
-    int idx;
+    assert(V1->getAdjecencyIndex() != -1);
+    assert(V2->getAdjecencyIndex() != -1);
 
-    Node* temp;
-    // inserting edge to v2 in v1
-    temp = V1;
-    idx = idx1;
-    Node* newNode;
-    while(temp->getNext() != NULL) {
-        // if V2 already present do nothing.
-        if (temp->getNext() == V2)
-            return;
-        temp = temp->getNext();
-    }
-    // insert node at the end.
-    newNode = new Node(V2);
-    temp->setNext(newNode);
-    if (isWeighted())
-        newNode->setWeight(weight);
-    degree[idx]++;
-    if (!isDirected()) {
-        // if undirected, insert corresponding edge in v2.
-        temp = V2;
-        idx = idx2;
-        while(temp->getNext() != NULL) {
-            // if V1 already present do nothing.
-            if (temp->getNext() == V1)
+    for (i = 0; i < (isDirected() ? 1: 2); i++, degree[idx]++, idx = 1 - idx) {
+        Node* currNode = nodeArr[idx];
+        Node* othrNode = nodeArr[1 - idx];
+        newEdge = new Edge(currNode, othrNode, isDirected(), weight);
+
+        // inserting edge to v2 in v1
+        temp = currNode->getEdgeList();
+        Edge* prevNode = temp;
+        while(temp != NULL) {
+            // if V2 already present do nothing.
+            if (temp == newEdge)
                 return;
+            prevNode = temp;
             temp = temp->getNext();
         }
-        // insert node at the end.
-        newNode = new Node(V1);
-        temp->setNext(newNode);
-        if (isWeighted())
-            newNode->setWeight(weight);
-        degree[idx]++;
+        if (prevNode != NULL)
+            prevNode->setNext(newEdge);
+        else
+            currNode->setEdgeList(newEdge);
     }
     nEdges++;
 }
@@ -264,7 +307,7 @@ void Graph::createEdge(Node *V1, Node* V2) {
     createEdge(V1, V2, 0);
 }
 
-void Graph::createEdge(string label1, string label2, int weight) {
+void Graph::createEdge(string label1, string label2, float weight) {
     Node* node1 = searchNodeByLabel(label1);
     Node* node2 = searchNodeByLabel(label2);
     if (node1 == NULL || node2 == NULL)
@@ -278,11 +321,13 @@ void Graph::createEdge(string label1, string label2) {
 
 void Graph::printGraph() {
     for (int i = 0; i < nVertices; i++) {
-        printNode(edgeNode[i]);
-        Node* tmp = edgeNode[i];
-        while (tmp->getNext() != NULL) {
-            printEdge(tmp->getNext());
-            printNode(tmp->getNext());
+        Node* node = edgeNode[i];
+        printNode(node);
+        Edge* tmp = node->getEdgeList();
+        while (tmp != NULL) {
+            assert(tmp->getCurrentNode() == node);
+            printEdge(tmp);
+            printNode(tmp->getOtherNode());
             tmp = tmp->getNext();
         }
         cout<<"\n"<<"\n";
@@ -300,12 +345,12 @@ void Graph::printNode(Node* node) {
      cout << ")";
 }
 
-void Graph::printEdge(Node* node) {
-    if (node == NULL)
+void Graph::printEdge(Edge* edge) {
+    if (edge == NULL)
         return;
     cout << (isDirected() ? "--" : "<--");
     if (isWeighted())
-        cout << node->getWeight();
+        cout << edge->getWeight();
     cout << "-->";
 }
 
@@ -342,7 +387,7 @@ void Graph::createRandomGraph(int nVertices, float density) {
         // ensures that there are no self loops
         while (idx1 == idx2)
             idx2 = rand() % nVertices;
-        createEdge(edgeNode[idx1], edgeNode[idx2], (isWeighted() ? rand() % 100 : 0));
+        createEdge(edgeNode[idx1], edgeNode[idx2], (isWeighted() ? rand() % 100 : 0.0));
         //printNode(edgeNode[idx1]);printEdge(edgeNode[idx2]);printNode(edgeNode[idx2]);
     }
 
@@ -355,11 +400,14 @@ void Graph::createRandomGraph(int nVertices) {
 Graph::~Graph() {
     for (int i = 0; i < nVertices; i++) {
         Node* tmp = edgeNode[i];
-        Node* tmp2;
-        while(tmp != NULL) {
-            tmp2 = tmp->getNext();
-            delete tmp;
-            tmp = tmp2;
+        Edge* tmp2 = tmp->getEdgeList();
+
+        delete tmp;
+        Edge *tmp3;
+        while(tmp2 != NULL) {
+            tmp3 = tmp2->getNext();
+            delete tmp2;
+            tmp2 = tmp3;
         }
     }
 }
