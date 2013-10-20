@@ -244,6 +244,13 @@ void Graph::createRandomGraph(int nVertices) {
     createRandomGraph(nVertices, 0.0);
 }
 
+Node* Graph::getNodeByIndex(int i) {
+    if (i < 0 || i >= nVertices)
+        return NULL;
+    return edgeNode[i];
+}
+
+
 static int count = 0;
 Graph::~Graph() {
     for (int i = 0; i < nVertices; i++) {

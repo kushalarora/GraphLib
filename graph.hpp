@@ -132,6 +132,9 @@ class Graph {
         void printGraph();
         void createRandomGraph(int nVertices);
         void createRandomGraph(int nVertices, float density);
+        int getNVertices() {return nVertices;}
+        int getNEdge() {return nEdges;}
+        Node* getNodeByIndex(int i);
     private:
         int nVertices;
         int nEdges;

@@ -7,10 +7,13 @@ int main(int argc, char** argv) {
         n[i] = new Node4BFS();
         n[i]->populateNode(true, true, 10);
         g.insertNode(n[i]);
+        }
+    srand(time(NULL));
+    int nEdges = 10 * (rand() % 10);
+    cout<<"nEdges "<< nEdges<<"\n";
+    for (int i = 0; i < nEdges; i++) {
+        g.createEdge(n[rand() % 10], n[rand() % 10]);
     }
-    for (int i = 1; i < 10; i++) {
-        g.createEdge(n[0], n[i]);
-    }
-    g.printGraph();
+    //g.printGraph();
     BreadthFirstSearch(&g, n[1]);
 }
