@@ -1,0 +1,10 @@
+#include "graph.hpp"
+
+int main(int argc, char *argv[]) {
+    if (argc > 1)
+        return -1;
+    Graph g = Graph(false, true, true, true);
+    g.createRandomGraph(10);
+    g.printGraph();
+    return 0;
+}
