@@ -22,6 +22,14 @@
 
 class Traversal {
     private:
+        virtual void processEdge(Edge* edge) {
+            cout << "Processed Edge";
+            (edge->getCurrentNode())->printNode();
+            edge->printEdge();
+            (edge->getOtherNode())->printNode();
+            cout << "\n";
+
+        }
         virtual void processOnBlack(Node* node) {
             cout << "Node Turned Black ";
             node->printNode();
