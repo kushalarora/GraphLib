@@ -1,7 +1,9 @@
 #include "traversal.hpp"
 
-void BreadthFirstSearch(Graph* G, Node4BFS* source) {
+
+void Traversal::BreadthFirstSearch(Graph* G, Node4BFS* source) {
     queue<Node4BFS*> q;
+    processOnGrey(source);
     source->setColor(GRAY);
     Edge* edge;
     Node4BFS* node;
@@ -10,9 +12,6 @@ void BreadthFirstSearch(Graph* G, Node4BFS* source) {
     q.push(source);
     while(!q.empty()) {
         node = q.front();
-        cout << "Visited node ";
-        node->printNode();
-        cout << "\n";
         assert(node != NULL);
         edge = node->getEdgeList();
         while(edge != NULL) {
@@ -20,17 +19,16 @@ void BreadthFirstSearch(Graph* G, Node4BFS* source) {
             other = (Node4BFS*)edge->getOtherNode();
             clr = other->getColor();
             if (clr == WHITE) {
+                processOnGrey(other);
                 other->setColor(GRAY);
                 other->setDist2Source(other->getDist2Source() + 1);
                 other->setParent(node);
-                cout << "Pushing node ";
-                other->printNode();
-                cout << "\n";
                 q.push(other);
             }
             edge = edge->getNext();
         }
         q.pop();
         node->setColor(BLACK);
+        processOnBlack(node);
     }
 }

@@ -2,9 +2,9 @@
 
 int main(int argc, char** argv) {
     Graph g = Graph(false, false, true, true);
-    Node4BFS* n[10];
+    Traversal::Node4BFS* n[10];
     for (int i = 0; i < 10; i++) {
-        n[i] = new Node4BFS();
+        n[i] = new Traversal::Node4BFS();
         n[i]->populateNode(true, true, 10);
         g.insertNode(n[i]);
         }
@@ -15,5 +15,5 @@ int main(int argc, char** argv) {
         g.createEdge(n[rand() % 10], n[rand() % 10]);
     }
     //g.printGraph();
-    BreadthFirstSearch(&g, n[1]);
+    Traversal().search(&g, n[1], Traversal::BFS);
 }
