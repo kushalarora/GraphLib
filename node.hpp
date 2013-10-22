@@ -1,12 +1,13 @@
 #include<iostream>
-
-#include "graph.hpp"
+#ifndef __NODE__
+#define __NODE__
 using namespace std;
 
+class Edge;
 class Node {
     string label;   // labels are unique
     int value;      // need not be unique
-    Edge<Node>* edge_list;     // linked list of edges.
+    Edge* edge_list;     // linked list of edges.
     bool operator ==(Node* node2);
     int adj_index;
     string createRandomLabels(int nVertices);
@@ -19,13 +20,14 @@ class Node {
         Node(Node* node);
         int getValue() {return value;}
         void setValue(int val) {value = val;}
-        Edge<Node>* getEdgeList() {return edge_list;}
-        Edge<Node>* setEdgeList(Edge<Node>* edge) {edge_list = edge;}
+        Edge* getEdgeList() {return edge_list;}
+        Edge* setEdgeList(Edge* edge) {edge_list = edge;}
         string getLabel() {return label;}
         void setLabel(string lbl) {label = lbl;}
         void setAdjecencyIndex(int val) {adj_index = val;}
         int  getAdjecencyIndex() {return adj_index;}
-        virtual Node* populateNode(bool labelled, bool valued, int seed);
+        virtual void populateNode(bool labelled, bool valued, int seed);
         void printNode();
-
+        ~Node();
 };
+#endif

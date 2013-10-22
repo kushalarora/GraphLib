@@ -13,6 +13,7 @@
 #include<queue>
 #include "graph.hpp"
 #include "node.hpp"
+#include "edge.hpp"
 
 /*
  * Breadth First Search
@@ -21,7 +22,7 @@
  */
 
 
-class Node4BFS : public Node {
+class NodeT : public Node {
     public:
         enum COLOR {WHITE, GRAY, BLACK};
         COLOR getColor() {return color;}
@@ -30,18 +31,18 @@ class Node4BFS : public Node {
         Node* getParent(Node* node) {return parent;}
         Node* getSource() {return source;}
         void setSource(Node* node) {this->source = node;}
-        Node4BFS() {}
-        Node4BFS(int value, string label):Node(value, label) {
+        NodeT() {}
+        NodeT(int value, string label):Node(value, label) {
             color = WHITE;
             parent = NULL;
             source = NULL;
             dist2s = -1;
         }
-        Node4BFS(int value) {
-            Node4BFS(value, NULL);
+        NodeT(int value) {
+            NodeT(value, NULL);
         }
-        Node4BFS(string label) {
-            Node4BFS(-1, label);
+        NodeT(string label) {
+            NodeT(-1, label);
         }
         int getDist2Source(){return dist2s;}
         void setDist2Source(int dist) {this->dist2s = dist;}
@@ -54,7 +55,7 @@ class Node4BFS : public Node {
 
 class Traversal {
     private:
-        virtual void processEdge(Edge<Node>* edge) {
+        virtual void processEdge(Edge* edge) {
             cout << "Processed Edge";
             (edge->getCurrentNode())->printNode();
             edge->printEdge();
@@ -62,22 +63,22 @@ class Traversal {
             cout << "\n";
 
         }
-        virtual void processOnBlack(Node* node) {
+        virtual void processOnBlack(NodeT* node) {
             cout << "Node Turned Black ";
             node->printNode();
             cout << "\n";
         };
-        virtual void processOnGrey(Node* node) {
+        virtual void processOnGrey(NodeT* node) {
             cout << "Node turned Grey ";
             node->printNode();
             cout << "\n";
         }
     public:
         enum SearchAlgo {BFS, DFS};
-        void BreadthFirstSearch(Graph<Node>* G, Node4BFS* source);
-        void search(Graph<Node>* G, Node* source, SearchAlgo algo) {
+        void BreadthFirstSearch(Graph<NodeT>* G, NodeT* source);
+        void search(Graph<NodeT>* G, NodeT* source, SearchAlgo algo) {
             if (algo == BFS) {
-                BreadthFirstSearch(G, (Node4BFS*)source);
+                BreadthFirstSearch(G, source);
             } else {
                 // write DFS code
             }

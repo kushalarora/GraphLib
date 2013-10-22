@@ -52,36 +52,12 @@
 #include<time.h>
 #include<assert.h>
 
+#include "edge.hpp"
+#include "node.hpp"
 using namespace std;
-
 #ifndef __GRAPH__
 #define __GRAPH__
 const int MAXV = 100000;
-
-// forward declaration to resolve circular dependency.
-
-template<class T>
-class Edge {
-    T* node1;
-    T* node2;
-    bool is_directed;
-    float weight;
-    Edge<T>* next;
-    const static float DEFAULT_WEIGHT = 0.0f;
-    public:
-        Edge(T* n1, T* n2);
-        Edge(T* n1, T* n2, bool is_directed, float weight);
-        Edge(T* n1, T* n2, bool is_directed);
-        Edge(T* n1, T* n2, float weight);
-        Edge<T>* getNext() {return next;}
-        void setNext(Edge<T>* next) {this->next = next;}
-        T* getCurrentNode() {return node1;}
-        T* getOtherNode() { return node2;}
-        bool isDirected() {return is_directed;}
-        float getWeight() {return weight;}
-        bool operator ==(Edge<T>* edge2);
-        void printEdge();
-};
 
 template<class T>
 class Graph {
@@ -113,49 +89,6 @@ class Graph {
         T* edgeNode[MAXV];
 };
 
-template<class T>
-Edge<T>::Edge(T* n1, T* n2, bool is_directed, float weight) {
-    node1 = n1;
-    node2 = n2;
-    this->is_directed = is_directed;
-    this->weight = weight;
-    this->next = NULL;
-}
-
-template<class T>
-void Edge<T>::printEdge() {
-    cout << (isDirected() ? "--" : "<--");
-    if (getWeight() != DEFAULT_WEIGHT)
-        cout << getWeight();
-    cout << "-->";
-}
-
-template<class T>
-Edge<T>::Edge(T* n1, T* n2) {
-    Edge<T>(n1, n2, false, DEFAULT_WEIGHT);
-}
-
-template<class T>
-Edge<T>::Edge(T* n1, T* n2, bool is_directed) {
-    Edge<T>(n1, n2, is_directed, DEFAULT_WEIGHT);
-}
-
-template<class T>
-Edge<T>::Edge(T* n1, T* n2, float weight) {
-    Edge<T>(n1, n2, false, weight);
-}
-
-template<class T>
-bool Edge<T>::operator ==(Edge<T>* edge2) {
-    if (edge2 == NULL)
-        return false;
-
-    if (this->getCurrentNode() == edge2->getCurrentNode() &&
-            this->getOtherNode() == edge2->getOtherNode() &&
-                (this->getWeight() == edge2->getWeight()))
-            return true;
-    return false;
-}
 
 
 template<class T>
@@ -196,8 +129,8 @@ T* Graph<T>::insertNode(T* node) {
 template<class T>
 void Graph<T>::createEdge(T *V1, T *V2, float weight) {
     T* nodeArr[2] = {V1, V2};
-    Edge<T>* newEdge;
-    Edge<T>* temp;
+    Edge* newEdge;
+    Edge* temp;
     int i = 0, idx = 0;
     // ensure that both nodes were inserted into graph.
     assert(V1->getAdjecencyIndex() != -1);
@@ -206,11 +139,11 @@ void Graph<T>::createEdge(T *V1, T *V2, float weight) {
     for (i = 0; i < (isDirected() ? 1: 2); i++, degree[idx]++, idx = 1 - idx) {
         T* currNode = nodeArr[idx];
         T* othrNode = nodeArr[1 - idx];
-        newEdge = new Edge<T>(currNode, othrNode, isDirected(), weight);
+        newEdge = new Edge((Node*)currNode, (Node*)othrNode, isDirected(), weight);
 
         // inserting edge to v2 in v1
         temp = currNode->getEdgeList();
-        Edge<T>* prevEdge = temp;
+        Edge* prevEdge = temp;
         while(temp != NULL) {
             // if V2 already present do nothing.
             if (temp->getOtherNode() == nodeArr[1 - idx])
@@ -236,7 +169,7 @@ void Graph<T>::printGraph() {
     for (int i = 0; i < nVertices; i++) {
         T* node = edgeNode[i];
         node->printNode();
-        Edge<T>* tmp = node->getEdgeList();
+        Edge* tmp = node->getEdgeList();
         while (tmp != NULL) {
             assert(tmp->getCurrentNode() == node);
             tmp->printEdge();
@@ -254,9 +187,9 @@ void Graph<T>::createRandomGraph(int nVertices, float density) {
     if (nVertices < 1)
         return;
     for (int i = 0; i < nVertices; i++) {
-        insertNode((new T())->populateNode(isLabelled(),
-                                    isValued(),
-                                    nVertices));
+        T* node = new T();
+        node->populateNode(isLabelled(), isValued(), nVertices);
+        insertNode(node);
     }
     int nEdges = nVertices * (density > 0.0 ? density * nVertices : (rand() % nVertices));
     cout<<"\nMaking "<<nEdges<<" Edges\n";
@@ -289,15 +222,7 @@ T* Graph<T>::getNodeByIndex(int i) {
 template<class T>
 Graph<T>::~Graph() {
     for (int i = 0; i < nVertices; i++) {
-        T* tmp = edgeNode[i];
-        Edge<T>* tmp2 = tmp->getEdgeList();
-        Edge<T> *tmp3;
-        while(tmp2 != NULL) {
-            tmp3 = tmp2->getNext();
-            delete tmp2;
-            tmp2 = tmp3;
-        }
-        delete tmp;
+        delete edgeNode[i];
     }
 }
 #endif

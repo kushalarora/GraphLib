@@ -1,4 +1,7 @@
 #include "node.hpp"
+#include "edge.hpp"
+#include<time.h>
+#include<stdlib.h>
 
 Node::Node(int val, string lbl) {
     value = val;
@@ -50,11 +53,20 @@ string Node::createRandomLabels(int nVertices) {
     return str;
 }
 
-Node* Node::populateNode(bool labelled, bool valued, int seed) {
+void Node::populateNode(bool labelled, bool valued, int seed) {
     if (labelled)
         this->setLabel(createRandomLabels(seed));
 
     if (valued)
         this->setValue(rand() % seed + 1);
 }
+Node::~Node() {
+    Edge* edge = getEdgeList();
+    Edge* tmp;
+    while(edge != NULL) {
+        tmp = edge->getNext();
+        delete edge;
+        edge = tmp;
+    }
 
+}
