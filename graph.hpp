@@ -59,12 +59,64 @@ using namespace std;
 const int MAXV = 100000;
 
 // forward declaration to resolve circular dependency.
-class Edge;
+
+template<class T>
+class Edge<T> {
+    T* node1;
+    T* node2;
+    bool is_directed;
+    float weight;
+    Edge<T>* next;
+    const static float DEFAULT_WEIGHT = 0.0f;
+    public:
+        Edge(T* n1, T* n2);
+        Edge(T* n1, T* n2, bool is_directed, float weight);
+        Edge(T* n1, T* n2, bool is_directed);
+        Edge(T* n1, T* n2, float weight);
+        Edge<T>* getNext() {return next;}
+        void setNext(Edge<T>* next) {this->next = next;}
+        T* getCurrentNode() {return node1;}
+        T* getOtherNode() { return node2;}
+        bool isDirected() {return is_directed;}
+        float getWeight() {return weight;}
+        bool operator ==(Edge<T>* edge2);
+        void printEdge();
+};
+
+template<class T>
+class Graph<T> {
+    public:
+        Graph();
+        ~Graph();
+        Graph(bool directed, bool weighted, bool labelled, bool valued);
+        T* insertNode(T* node);
+        void createEdge(T* V1, T* V2);
+        void createEdge(T* V1, T* V2, float weight);
+        inline bool isWeighted() {return weighted;}
+        inline bool isDirected() {return directed;}
+        inline bool isLabelled() {return labelled;}
+        inline bool isValued() {return valued;}
+        void printGraph();
+        void createRandomGraph(int nVertices);
+        void createRandomGraph(int nVertices, float density);
+        int getNVertices() {return nVertices;}
+        int getNEdge() {return nEdges;}
+        T* getNodeByIndex(int i);
+    private:
+        int nVertices;
+        int nEdges;
+        bool directed;
+        bool weighted;
+        bool labelled;
+        bool valued;
+        int degree[MAXV];
+        T* edgeNode[MAXV];
+};
 
 class Node {
     string label;   // labels are unique
     int value;      // need not be unique
-    Edge* edge_list;     // linked list of edges.
+    Edge<Node>* edge_list;     // linked list of edges.
     bool operator ==(Node* node2);
     int adj_index;
     string createRandomLabels(int nVertices);
@@ -77,8 +129,8 @@ class Node {
         Node(Node* node);
         int getValue() {return value;}
         void setValue(int val) {value = val;}
-        Edge* getEdgeList() {return edge_list;}
-        Edge* setEdgeList(Edge* edge) {edge_list = edge;}
+        Edge<Node>* getEdgeList() {return edge_list;}
+        Edge<Node>* setEdgeList(Edge<Node>* edge) {edge_list = edge;}
         string getLabel() {return label;}
         void setLabel(string lbl) {label = lbl;}
         void setAdjecencyIndex(int val) {adj_index = val;}
@@ -87,63 +139,4 @@ class Node {
         void printNode();
 
 };
-
-
-class Edge {
-    Node* node1;
-    Node* node2;
-    bool is_directed;
-    float weight;
-    Edge* next;
-    const static float DEFAULT_WEIGHT = 0.0f;
-    public:
-        Edge(Node* n1, Node* n2);
-        Edge(Node* n1, Node* n2, bool is_directed, float weight);
-        Edge(Node* n1, Node* n2, bool is_directed);
-        Edge(Node* n1, Node* n2, float weight);
-        Edge* getNext() {return next;}
-        void setNext(Edge* next) {this->next = next;}
-        Node* getCurrentNode() {return node1;}
-        Node* getOtherNode() { return node2;}
-        bool isDirected() {return is_directed;}
-        float getWeight() {return weight;}
-        bool operator ==(Edge* edge2);
-        void printEdge();
-};
-
-class Graph {
-    public:
-        Graph();
-        ~Graph();
-        Graph(bool directed, bool weighted, bool labelled, bool valued);
-        Node* insertNode(Node* node);
-        Node* insertNode(int value);
-        Node* insertNode(string label);
-        Node* insertNode(int value, string label);
-        void createEdge(Node* V1, Node* V2);
-        void createEdge(Node* V1, Node* V2, float weight);
-        void createEdge(string label1, string label2);
-        void createEdge(string label1, string label2, float weight);
-        inline bool isWeighted() {return weighted;}
-        inline bool isDirected() {return directed;}
-        inline bool isLabelled() {return labelled;}
-        inline bool isValued() {return valued;}
-        Node* searchNodeByLabel(string label);
-        void printGraph();
-        void createRandomGraph(int nVertices);
-        void createRandomGraph(int nVertices, float density);
-        int getNVertices() {return nVertices;}
-        int getNEdge() {return nEdges;}
-        Node* getNodeByIndex(int i);
-    private:
-        int nVertices;
-        int nEdges;
-        bool directed;
-        bool weighted;
-        bool labelled;
-        bool valued;
-        int degree[MAXV];
-        Node *edgeNode[MAXV];
-};
-
 #endif

@@ -29,156 +29,14 @@ bool Node::operator==(Node* node2) {
         return this->label == node2->label;
     return false;
 };
-Edge::Edge(Node* n1, Node* n2, bool is_directed, float weight) {
+
+template<class T>
+Edge<T>::Edge(T* n1, T* n2, bool is_directed, float weight) {
     node1 = n1;
     node2 = n2;
     this->is_directed = is_directed;
     this->weight = weight;
     this->next = NULL;
-}
-
-Edge::Edge(Node* n1, Node* n2) {
-    Edge(n1, n2, false, DEFAULT_WEIGHT);
-}
-
-Edge::Edge(Node* n1, Node* n2, bool is_directed) {
-    Edge(n1, n2, is_directed, DEFAULT_WEIGHT);
-}
-
-Edge::Edge(Node* n1, Node* n2, float weight) {
-    Edge(n1, n2, false, weight);
-}
-
-bool Edge::operator ==(Edge* edge2) {
-    if (edge2 == NULL)
-        return false;
-
-    if (this->getCurrentNode() == edge2->getCurrentNode() &&
-            this->getOtherNode() == edge2->getOtherNode() &&
-                (this->getWeight() == edge2->getWeight()))
-            return true;
-    return false;
-}
-
-
-Graph::Graph(bool dirctd, bool wghtd, bool lbled, bool valed) {
-    nVertices = 0;
-    nEdges = 0;
-    for (int i = 0; i < MAXV; i++) {
-        degree[i] = 0;
-        edgeNode[i] = NULL;
-    }
-    directed = dirctd;
-    weighted = wghtd;
-    labelled = lbled;
-    valued = valed;
-}
-Graph::Graph() {
-    Graph(false, false, false, false);
-}
-
-
-Node* Graph::insertNode(Node* node) {
-    int i;
-    for (i = 0; i < nVertices; i++) {
-        if (edgeNode[i] == node)
-            // node already present
-            return node;
-    }
-    edgeNode[i] = node;
-    nVertices += 1;
-    degree[i] = 0;
-    node->setAdjecencyIndex(i);
-    return node;
-}
-Node* Graph::insertNode(int value) {
-    assert(isValued());
-    return insertNode(new Node(value, NULL));
-}
-
-Node* Graph::insertNode(int value, string label) {
-    assert(isValued() && isLabelled());
-    return insertNode(new Node(value, label));
-}
-
-Node* Graph::insertNode(string label) {
-    assert(isLabelled());
-    return insertNode(new Node(0, label));
-}
-
-Node* Graph::searchNodeByLabel(string label) {
-    assert(isLabelled());
-    if (label.length() > 0) {
-        for (int i = 0 ; i < nVertices; i++) {
-            if (label == edgeNode[i]->getLabel()) {
-                return edgeNode[i];
-            }
-        }
-    }
-    return NULL;
-}
-
-void Graph::createEdge(Node *V1, Node *V2, float weight) {
-    Node* nodeArr[2] = {V1, V2};
-    Edge* newEdge;
-    Edge* temp;
-    int i = 0, idx = 0;
-    // ensure that both nodes were inserted into graph.
-    assert(V1->getAdjecencyIndex() != -1);
-    assert(V2->getAdjecencyIndex() != -1);
-
-    for (i = 0; i < (isDirected() ? 1: 2); i++, degree[idx]++, idx = 1 - idx) {
-        Node* currNode = nodeArr[idx];
-        Node* othrNode = nodeArr[1 - idx];
-        newEdge = new Edge(currNode, othrNode, isDirected(), weight);
-
-        // inserting edge to v2 in v1
-        temp = currNode->getEdgeList();
-        Edge* prevEdge = temp;
-        while(temp != NULL) {
-            // if V2 already present do nothing.
-            if (temp->getOtherNode() == nodeArr[1 - idx])
-                return;
-            prevEdge = temp;
-            temp = temp->getNext();
-        }
-        if (prevEdge != NULL)
-            prevEdge->setNext(newEdge);
-        else
-            currNode->setEdgeList(newEdge);
-    }
-    nEdges++;
-}
-
-void Graph::createEdge(Node *V1, Node* V2) {
-    createEdge(V1, V2, 0);
-}
-
-void Graph::createEdge(string label1, string label2, float weight) {
-    Node* node1 = searchNodeByLabel(label1);
-    Node* node2 = searchNodeByLabel(label2);
-    if (node1 == NULL || node2 == NULL)
-        return;
-    createEdge(node1, node2, weight);
-}
-
-void Graph::createEdge(string label1, string label2) {
-    createEdge(label1, label2, 0);
-}
-
-void Graph::printGraph() {
-    for (int i = 0; i < nVertices; i++) {
-        Node* node = edgeNode[i];
-        node->printNode();
-        Edge* tmp = node->getEdgeList();
-        while (tmp != NULL) {
-            assert(tmp->getCurrentNode() == node);
-            tmp->printEdge();
-            (tmp->getOtherNode())->printNode();
-            tmp = tmp->getNext();
-        }
-        cout<<"\n"<<"\n";
-    }
 }
 
 void Node::printNode() {
@@ -188,13 +46,6 @@ void Node::printNode() {
      if (getValue() > 0)
          cout << getValue() << " ";
      cout << ")";
-}
-
-void Edge::printEdge() {
-    cout << (isDirected() ? "--" : "<--");
-    if (getWeight() != DEFAULT_WEIGHT)
-        cout << getWeight();
-    cout << "-->";
 }
 
 
@@ -216,12 +67,139 @@ Node* Node::populateNode(bool labelled, bool valued, int seed) {
         this->setValue(rand() % seed + 1);
 }
 
-void Graph::createRandomGraph(int nVertices, float density) {
+template<class T>
+void Edge<T>::printEdge() {
+    cout << (isDirected() ? "--" : "<--");
+    if (getWeight() != DEFAULT_WEIGHT)
+        cout << getWeight();
+    cout << "-->";
+}
+
+template<class T>
+Edge<T>::Edge(T* n1, T* n2) {
+    Edge<T>(n1, n2, false, DEFAULT_WEIGHT);
+}
+
+template<class T>
+Edge<T>::Edge(T* n1, T* n2, bool is_directed) {
+    Edge<T>(n1, n2, is_directed, DEFAULT_WEIGHT);
+}
+
+template<class T>
+Edge<T>::Edge(T* n1, T* n2, float weight) {
+    Edge<T>(n1, n2, false, weight);
+}
+
+template<class T>
+bool Edge<T>::operator ==(Edge<T>* edge2) {
+    if (edge2 == NULL)
+        return false;
+
+    if (this->getCurrentNode() == edge2->getCurrentNode() &&
+            this->getOtherNode() == edge2->getOtherNode() &&
+                (this->getWeight() == edge2->getWeight()))
+            return true;
+    return false;
+}
+
+
+template<class T>
+Graph<T>::Graph(bool dirctd, bool wghtd, bool lbled, bool valed) {
+    nVertices = 0;
+    nEdges = 0;
+    for (int i = 0; i < MAXV; i++) {
+        degree[i] = 0;
+        edgeNode[i] = NULL;
+    }
+    directed = dirctd;
+    weighted = wghtd;
+    labelled = lbled;
+    valued = valed;
+}
+template<class T>
+Graph<T>::Graph() {
+    Graph(false, false, false, false);
+}
+
+
+template<class T>
+T* Graph<T>::insertNode(T* node) {
+    int i;
+    for (i = 0; i < nVertices; i++) {
+        if (edgeNode[i] == node)
+            // node already present
+            return node;
+    }
+    edgeNode[i] = node;
+    nVertices += 1;
+    degree[i] = 0;
+    node->setAdjecencyIndex(i);
+    return node;
+}
+
+
+template<class T>
+void Graph<T>::createEdge(T *V1, T *V2, float weight) {
+    T* nodeArr[2] = {V1, V2};
+    Edge<T>* newEdge;
+    Edge<T>* temp;
+    int i = 0, idx = 0;
+    // ensure that both nodes were inserted into graph.
+    assert(V1->getAdjecencyIndex() != -1);
+    assert(V2->getAdjecencyIndex() != -1);
+
+    for (i = 0; i < (isDirected() ? 1: 2); i++, degree[idx]++, idx = 1 - idx) {
+        T* currNode = nodeArr[idx];
+        T* othrNode = nodeArr[1 - idx];
+        newEdge = new Edge<T>(currNode, othrNode, isDirected(), weight);
+
+        // inserting edge to v2 in v1
+        temp = currNode->getEdgeList();
+        Edge<T>* prevEdge = temp;
+        while(temp != NULL) {
+            // if V2 already present do nothing.
+            if (temp->getOtherNode() == nodeArr[1 - idx])
+                return;
+            prevEdge = temp;
+            temp = temp->getNext();
+        }
+        if (prevEdge != NULL)
+            prevEdge->setNext(newEdge);
+        else
+            currNode->setEdgeList(newEdge);
+    }
+    nEdges++;
+}
+
+template<class T>
+void Graph<T>::createEdge(T *V1, T* V2) {
+    createEdge(V1, V2, 0);
+}
+
+template<class T>
+void Graph<T>::printGraph() {
+    for (int i = 0; i < nVertices; i++) {
+        T* node = edgeNode[i];
+        node->printNode();
+        Edge<T>* tmp = node->getEdgeList();
+        while (tmp != NULL) {
+            assert(tmp->getCurrentNode() == node);
+            tmp->printEdge();
+            (tmp->getOtherNode())->printNode();
+            tmp = tmp->getNext();
+        }
+        cout<<"\n"<<"\n";
+    }
+}
+
+
+template<class T>
+void Graph<T>::createRandomGraph(int nVertices, float density) {
     srand(time(NULL));
     if (nVertices < 1)
         return;
     for (int i = 0; i < nVertices; i++) {
-        insertNode((new Node())->populateNode(isLabelled(),
+        insertNode((new T())->populateNode(isLabelled(),
                                     isValued(),
                                     nVertices));
     }
@@ -240,23 +218,25 @@ void Graph::createRandomGraph(int nVertices, float density) {
 
 }
 
-void Graph::createRandomGraph(int nVertices) {
+template<class T>
+void Graph<T>::createRandomGraph(int nVertices) {
     createRandomGraph(nVertices, 0.0);
 }
 
-Node* Graph::getNodeByIndex(int i) {
+template<class T>
+T* Graph<T>::getNodeByIndex(int i) {
     if (i < 0 || i >= nVertices)
         return NULL;
     return edgeNode[i];
 }
 
 
-static int count = 0;
-Graph::~Graph() {
+template<class T>
+Graph<T>::~Graph() {
     for (int i = 0; i < nVertices; i++) {
-        Node* tmp = edgeNode[i];
-        Edge* tmp2 = tmp->getEdgeList();
-        Edge *tmp3;
+        T* tmp = edgeNode[i];
+        Edge<T>* tmp2 = tmp->getEdgeList();
+        Edge<T> *tmp3;
         while(tmp2 != NULL) {
             tmp3 = tmp2->getNext();
             delete tmp2;
