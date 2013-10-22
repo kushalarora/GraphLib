@@ -1,10 +1,10 @@
 #include "traversal.hpp"
 
 int main(int argc, char** argv) {
-    Graph g = Graph(false, false, true, true);
-    Traversal::Node4BFS* n[10];
+    Graph<Node> g = Graph<Node>(false, false, true, true);
+    Node4BFS* n[10];
     for (int i = 0; i < 10; i++) {
-        n[i] = new Traversal::Node4BFS();
+        n[i] = new Node4BFS();
         n[i]->populateNode(true, true, 10);
         g.insertNode(n[i]);
         }

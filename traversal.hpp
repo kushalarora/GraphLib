@@ -12,6 +12,7 @@
 #include<iostream>
 #include<queue>
 #include "graph.hpp"
+#include "node.hpp"
 
 /*
  * Breadth First Search
@@ -20,9 +21,40 @@
  */
 
 
+class Node4BFS : public Node {
+    public:
+        enum COLOR {WHITE, GRAY, BLACK};
+        COLOR getColor() {return color;}
+        void setColor(COLOR color) {this->color = color;}
+        void setParent(Node* node) {this->parent = node;}
+        Node* getParent(Node* node) {return parent;}
+        Node* getSource() {return source;}
+        void setSource(Node* node) {this->source = node;}
+        Node4BFS() {}
+        Node4BFS(int value, string label):Node(value, label) {
+            color = WHITE;
+            parent = NULL;
+            source = NULL;
+            dist2s = -1;
+        }
+        Node4BFS(int value) {
+            Node4BFS(value, NULL);
+        }
+        Node4BFS(string label) {
+            Node4BFS(-1, label);
+        }
+        int getDist2Source(){return dist2s;}
+        void setDist2Source(int dist) {this->dist2s = dist;}
+    private:
+        COLOR color;
+        Node* parent;
+        Node* source;
+        int dist2s;
+};
+
 class Traversal {
     private:
-        virtual void processEdge(Edge* edge) {
+        virtual void processEdge(Edge<Node>* edge) {
             cout << "Processed Edge";
             (edge->getCurrentNode())->printNode();
             edge->printEdge();
@@ -41,46 +73,14 @@ class Traversal {
             cout << "\n";
         }
     public:
-        enum COLOR {WHITE, GRAY, BLACK};
         enum SearchAlgo {BFS, DFS};
-        class Node4BFS : public Node {
-            public:
-                COLOR getColor() {return color;}
-                void setColor(COLOR color) {this->color = color;}
-                void setParent(Node* node) {this->parent = node;}
-                Node* getParent(Node* node) {return parent;}
-                Node* getSource() {return source;}
-                void setSource(Node* node) {this->source = node;}
-                Node4BFS() {}
-                Node4BFS(int value, string label):Node(value, label) {
-                    color = WHITE;
-                    parent = NULL;
-                    source = NULL;
-                    dist2s = -1;
-                }
-                Node4BFS(int value) {
-                    Node4BFS(value, NULL);
-                }
-                Node4BFS(string label) {
-                    Node4BFS(-1, label);
-                }
-                int getDist2Source(){return dist2s;}
-                void setDist2Source(int dist) {this->dist2s = dist;}
-            private:
-                COLOR color;
-                Node* parent;
-                Node* source;
-                int dist2s;
-        };
-
-        void BreadthFirstSearch(Graph* G, Node4BFS* source);
-        void search(Graph *G, Node* source, SearchAlgo algo) {
+        void BreadthFirstSearch(Graph<Node>* G, Node4BFS* source);
+        void search(Graph<Node>* G, Node* source, SearchAlgo algo) {
             if (algo == BFS) {
                 BreadthFirstSearch(G, (Node4BFS*)source);
             } else {
                 // write DFS code
             }
         }
-
 };
 

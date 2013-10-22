@@ -1,13 +1,13 @@
 #include "traversal.hpp"
 
 
-void Traversal::BreadthFirstSearch(Graph* G, Node4BFS* source) {
+void Traversal::BreadthFirstSearch(Graph<Node>* G, Node4BFS* source) {
     queue<Node4BFS*> q;
-    source->setColor(GRAY);
-    Edge* edge;
+    source->setColor(Node4BFS::GRAY);
+    Edge<Node>* edge;
     Node4BFS* node;
     Node4BFS* other;
-    COLOR clr;
+    Node4BFS::COLOR clr;
     q.push(source);
     while(!q.empty()) {
         node = q.front();
@@ -18,9 +18,9 @@ void Traversal::BreadthFirstSearch(Graph* G, Node4BFS* source) {
             assert(edge->getCurrentNode() == node);
             other = (Node4BFS*)edge->getOtherNode();
             clr = other->getColor();
-            if (clr == WHITE) {
+            if (clr == Node4BFS::WHITE) {
                 processEdge(edge);
-                other->setColor(GRAY);
+                other->setColor(Node4BFS::GRAY);
                 other->setDist2Source(other->getDist2Source() + 1);
                 other->setParent(node);
                 q.push(other);
@@ -28,7 +28,7 @@ void Traversal::BreadthFirstSearch(Graph* G, Node4BFS* source) {
             edge = edge->getNext();
         }
         q.pop();
-        node->setColor(BLACK);
+        node->setColor(Node4BFS::BLACK);
         processOnBlack(node);
     }
 }
