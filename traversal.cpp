@@ -4,7 +4,6 @@
 void Traversal::BreadthFirstSearch(Graph* G, Node4BFS* source) {
     queue<Node4BFS*> q;
     source->setColor(GRAY);
-    processOnGrey(source);
     Edge* edge;
     Node4BFS* node;
     Node4BFS* other;
@@ -18,9 +17,9 @@ void Traversal::BreadthFirstSearch(Graph* G, Node4BFS* source) {
         while(edge != NULL) {
             assert(edge->getCurrentNode() == node);
             other = (Node4BFS*)edge->getOtherNode();
-            processEdge(edge);
             clr = other->getColor();
             if (clr == WHITE) {
+                processEdge(edge);
                 other->setColor(GRAY);
                 other->setDist2Source(other->getDist2Source() + 1);
                 other->setParent(node);

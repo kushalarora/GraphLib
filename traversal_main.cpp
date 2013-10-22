@@ -12,8 +12,14 @@ int main(int argc, char** argv) {
     int nEdges = 10 * (rand() % 10);
     cout<<"nEdges "<< nEdges<<"\n";
     for (int i = 0; i < nEdges; i++) {
+        Node* node1 = n[rand() % 10];
+        Node* node2 = n[rand() % 10];
+        while (node2 == node1)
+            node2 = n[rand() % 10];
+
         g.createEdge(n[rand() % 10], n[rand() % 10]);
     }
-    //g.printGraph();
+    g.printGraph();
+    cout<<endl<<endl;
     Traversal().search(&g, n[1], Traversal::BFS);
 }
