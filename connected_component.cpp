@@ -8,15 +8,16 @@
 */
 
 #include "traversal.hpp"
+#include "connected_graph.hpp"
 
-int connected_component(Graph* g) {
+int connected_component(Graph<NodeT>* g) {
     int c = 0;
     for (int i = 0; i < g->getNVertices(); i++) {
-        Node4BFS* node = (Node4BFS*)g->getNodeByIndex(i);
-        if (node->getColor() == WHITE) {
+        NodeT* node = (NodeT*)g->getNodeByIndex(i);
+        if (node->getColor() == NodeT::WHITE) {
             c++;
             cout << "Component No. " << c << "\n";
-            BreadthFirstSearch(g, node);
+            Traversal().search(g, node, Traversal::BFS);
             cout << "\n" << "\n";
         }
     }
@@ -24,19 +25,11 @@ int connected_component(Graph* g) {
 }
 
 int main() {
-    Graph g = Graph(false, false, true, true);
-    Node4BFS* n[10];
-    for (int i = 0; i < 10; i++) {
-        n[i] = new Node4BFS();
-        n[i]->populateNode(true, true, 10);
-        g.insertNode(n[i]);
-        }
-    srand(time(NULL));
-    int nEdges = 7; //* (rand() % 10);
-    cout<<"nEdges "<< nEdges<<"\n";
-    for (int i = 0; i < nEdges; i++) {
-        g.createEdge(n[rand() % 10], n[rand() % 10]);
-    }
+   // Graph g = Graph(false, false, true, true);
+   //  g.createRandomGraph(10);
+   //
+    ConnectedGraph<NodeT> g = ConnectedGraph<NodeT>(false, true, true, true);
+    g.createRandomGraph(5);
     g.printGraph();
     cout << "\n" << "\n";
     connected_component(&g);

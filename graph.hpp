@@ -72,9 +72,9 @@ class Graph {
         inline bool isDirected() {return directed;}
         inline bool isLabelled() {return labelled;}
         inline bool isValued() {return valued;}
-        void printGraph();
-        void createRandomGraph(int nVertices);
-        void createRandomGraph(int nVertices, float density);
+        virtual void printGraph();
+        virtual void createRandomGraph(int nVertices);
+        virtual void createRandomGraph(int nVertices, float density);
         int getNVertices() {return nVertices;}
         int getNEdge() {return nEdges;}
         T* getNodeByIndex(int i);
@@ -87,6 +87,8 @@ class Graph {
         bool valued;
         int degree[MAXV];
         T* edgeNode[MAXV];
+    protected:
+        virtual void createRandomEdges(int nEdges, int nVertices);
 };
 
 
@@ -180,18 +182,8 @@ void Graph<T>::printGraph() {
     }
 }
 
-
 template<class T>
-void Graph<T>::createRandomGraph(int nVertices, float density) {
-    srand(time(NULL));
-    if (nVertices < 1)
-        return;
-    for (int i = 0; i < nVertices; i++) {
-        T* node = new T();
-        node->populateNode(isLabelled(), isValued(), nVertices);
-        insertNode(node);
-    }
-    int nEdges = nVertices * (density > 0.0 ? density * nVertices : (rand() % nVertices));
+void Graph<T>::createRandomEdges(int nEdges, int nVertices) {
     cout<<"\nMaking "<<nEdges<<" Edges\n";
     for (long i = 0; i < nEdges; i++) {
         int idx1 = rand() % nVertices;
@@ -203,7 +195,19 @@ void Graph<T>::createRandomGraph(int nVertices, float density) {
         createEdge(edgeNode[idx1], edgeNode[idx2], (isWeighted() ? rand() % 100 : 0.0));
         //printNode(edgeNode[idx1]);printEdge(edgeNode[idx2]);printNode(edgeNode[idx2]);
     }
+}
 
+template<class T>
+void Graph<T>::createRandomGraph(int nVertices, float density) {
+    srand(time(NULL));
+    if (nVertices < 1)
+        return;
+    for (int i = 0; i < nVertices; i++) {
+        T* node = new T();
+        node->populateNode(isLabelled(), isValued(), nVertices);
+        insertNode(node);
+    }
+    createRandomEdges(nVertices * (density > 0.0 ? density * nVertices : (rand() % nVertices)), nVertices);
 }
 
 template<class T>
