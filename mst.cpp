@@ -6,9 +6,9 @@ int main() {
     G->createRandomGraph(5);
     G->printGraph();
     cout<<endl<<endl;
-    
-    cout << "Total Spanned Weight "<< MinimumSpanningTree::getInstance().getSpanningTree(G, G->getNodeByIndex(0), PRIMS) << endl;
-    
+
+    cout << "Total Spanned Weight "<< MinimumSpanningTree::getInstance().spanMinimumTree(G, G->getNodeByIndex(0)) << endl;
+
     MinimumSpanningTree::getInstance().printMSTEdges(G);
 
 }

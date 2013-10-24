@@ -1,6 +1,7 @@
 #include "MST.hpp"
 
 int MinimumSpanningTree::PRIMS(Graph<NodeMST> *G, NodeMST* source) {
+    mQ->init(G);
     NodeMST* currVertex = source;
     currVertex->setDistance(0);
     int total_dist = 0;
@@ -15,18 +16,18 @@ int MinimumSpanningTree::PRIMS(Graph<NodeMST> *G, NodeMST* source) {
 
             if ((other->getDistance() > weight) &&
                 (!other->isInTree())) {
-                    other->setDistance(weight);
+                    mQ->decreaseKey(other, weight);
                     other->setParent(currVertex);
                 }
             tmp = tmp->getNext();
         }
-        currVertex = getVertexWithSmallestWeight(G);
+        currVertex = mQ->getMinWeightNode();
     }
     return total_dist;
 }
 
 
-NodeMST* MinimumSpanningTree::getVertexWithSmallestWeight(Graph<NodeMST>* G) {
+NodeMST* MinimumSpanningTree::simpleMinQueue(Graph<NodeMST>* G) {
     int distance = INT_MAX;
     NodeMST* smallest_node;
     for (int i = 0; i < G->getNVertices(); i++) {
@@ -39,7 +40,6 @@ NodeMST* MinimumSpanningTree::getVertexWithSmallestWeight(Graph<NodeMST>* G) {
     }
     return smallest_node;
 }
-
 
 void MinimumSpanningTree::printMSTEdges(Graph<NodeMST>* G) {
     NodeMST* parent;
