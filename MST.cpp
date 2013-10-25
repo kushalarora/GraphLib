@@ -1,4 +1,5 @@
 #include "MST.hpp"
+#include<climits>
 
 int MinimumSpanningTree::PRIMS(Graph<NodeMST> *G, NodeMST* source) {
     mQ->init(G);
@@ -63,3 +64,42 @@ void MinimumSpanningTree::printMSTEdges(Graph<NodeMST>* G) {
         }
     }
 }
+void SimpleMinQueueWrapper::decreaseKey(NodeMST* node, int weight) {
+    if (weight < node->getDistance())
+        node->setDistance(weight);
+}
+NodeMST* SimpleMinQueueWrapper::getMinWeightNode() {
+    int distance = INT_MAX;
+    NodeMST* smallest_node;
+    for (int i = 0; i < g->getNVertices(); i++) {
+        NodeMST* node = g->getNodeByIndex(i);
+        if ((!node->isInTree()) &&
+                distance > node->getDistance()) {
+            distance = node->getDistance();
+            smallest_node = node;
+        }
+    }
+    return smallest_node;
+}
+
+void FHeapQueueWrapper::init(Graph<NodeMST>* G) {
+    for (int i = 0; i < G->getNVertices(); i++) {
+        heap.insertNode(G->getNodeByIndex(i), INT_MAX);
+    }
+}
+
+void FHeapQueueWrapper::insertNode(NodeMST* node) {
+    heap.insertNode(node, INT_MAX);
+}
+
+void FHeapQueueWrapper::decreaseKey(NodeMST* node, int weight) {
+    if (node->getDistance() > weight){
+        node->setDistance(weight);
+        heap.decreaseKey(node, weight);
+    }
+}
+
+NodeMST* FHeapQueueWrapper::getMinWeightNode() {
+    return heap.extractMin();
+}
+

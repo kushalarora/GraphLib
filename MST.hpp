@@ -2,6 +2,7 @@
 using namespace std;
 
 #include "graph.hpp"
+#include "../DataStructures/FibonacciHeap.hpp"
 #include<limits.h>
 class NodeMST : public Node {
     private:
@@ -21,6 +22,11 @@ class NodeMST : public Node {
         int getDistance() {return distance;}
         void setParent(NodeMST* parent) {this->parent = parent;}
         NodeMST* getParent() {return parent;}
+        void reset() {
+            in_tree = false;
+            distance = INT_MAX;
+            parent = NULL;
+        }
 };
 class MinQueueWrapper {
     public:
@@ -30,40 +36,31 @@ class MinQueueWrapper {
         virtual void decreaseKey(NodeMST* node, int weight) = 0;
 };
 
-class SimpleMinQueueWrapper : public MinQueueWrapper{
+class SimpleMinQueueWrapper : public MinQueueWrapper {
     private:
         Graph<NodeMST> *g;
-        int size;
     public:
         void init(Graph<NodeMST> *G) {
             g = G;
         }
-
         void insertNode(NodeMST* node) {
             // do nothing
         }
-
-        void decreaseKey(NodeMST* node, int weight) {
-            if (weight < node->getDistance())
-                node->setDistance(weight);
-        }
-
-        NodeMST* getMinWeightNode() {
-            int distance = INT_MAX;
-            NodeMST* smallest_node;
-            for (int i = 0; i < g->getNVertices(); i++) {
-                NodeMST* node = g->getNodeByIndex(i);
-                if ((!node->isInTree()) &&
-                        distance > node->getDistance()) {
-                    distance = node->getDistance();
-                    smallest_node = node;
-                }
-            }
-            return smallest_node;
-        }
+        void decreaseKey(NodeMST* node, int weight);
+        NodeMST* getMinWeightNode();
 };
-
-
+class FHeapQueueWrapper : public MinQueueWrapper {
+    private:
+        FibonacciHeap<NodeMST> heap;
+    public:
+        FHeapQueueWrapper() {
+            heap = FibonacciHeap<NodeMST>();
+        }
+        void init(Graph<NodeMST> *G);
+        void insertNode(NodeMST* node);
+        void decreaseKey(NodeMST* node, int weight);
+        NodeMST* getMinWeightNode();
+};
 
 enum Algo {PRIM, KRUSKAL};
 enum Scheme {SIMPLE, FHEAP};
@@ -84,9 +81,9 @@ class MinimumSpanningTree {
         int PRIMS(Graph<NodeMST> *G, NodeMST* source);
         int KRUSKAL(Graph<NodeMST> *G, NodeMST* source);
     public:
-        static MinimumSpanningTree& getInstance() {
+        static MinimumSpanningTree* getInstance() {
             static MinimumSpanningTree instance;
-            return instance;
+            return &instance;
         }
 
         int spanMinimumTree(Graph<NodeMST> *G, NodeMST* source) {
@@ -100,9 +97,17 @@ class MinimumSpanningTree {
         void setScheme(Scheme scheme) {
             if (scheme == SIMPLE)
                 mQ = new SimpleMinQueueWrapper();
+            else if(scheme == FHEAP)
+                mQ = new FHeapQueueWrapper();
         }
 
         void printMSTEdges(Graph<NodeMST>* G);
+
+        void reset(Graph<NodeMST> *G) {
+            for (int i = 0; i < G->getNVertices(); i++) {
+                G->getNodeByIndex(i)->reset();
+            }
+        }
 };
 
 

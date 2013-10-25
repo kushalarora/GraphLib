@@ -184,7 +184,9 @@ void Graph<T>::printGraph() {
 
 template<class T>
 void Graph<T>::createRandomEdges(int nEdges, int nVertices) {
+#ifdef DEBUG
     cout<<"\nMaking "<<nEdges<<" Edges\n";
+#endif
     for (long i = 0; i < nEdges; i++) {
         int idx1 = rand() % nVertices;
         int idx2 = rand() % nVertices;
@@ -192,7 +194,7 @@ void Graph<T>::createRandomEdges(int nEdges, int nVertices) {
         // ensures that there are no self loops
         while (idx1 == idx2)
             idx2 = rand() % nVertices;
-        createEdge(edgeNode[idx1], edgeNode[idx2], (isWeighted() ? rand() % 100 : 0.0));
+        createEdge(edgeNode[idx1], edgeNode[idx2], (isWeighted() ? rand() % 100  + 1: 0.0));
         //printNode(edgeNode[idx1]);printEdge(edgeNode[idx2]);printNode(edgeNode[idx2]);
     }
 }

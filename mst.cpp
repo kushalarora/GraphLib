@@ -3,12 +3,17 @@
 
 int main() {
     Graph<NodeMST>* G = new ConnectedGraph<NodeMST>(false, true, true, true);
-    G->createRandomGraph(5);
-    G->printGraph();
+    G->createRandomGraph(1000);
+    //G->printGraph();
     cout<<endl<<endl;
-
-    cout << "Total Spanned Weight "<< MinimumSpanningTree::getInstance().spanMinimumTree(G, G->getNodeByIndex(0)) << endl;
-
-    MinimumSpanningTree::getInstance().printMSTEdges(G);
-
+    MinimumSpanningTree* mst = MinimumSpanningTree::getInstance();
+    cout << "Using Simple Scheme"<<endl;
+    cout << "Total Spanned Weight "<< mst->spanMinimumTree(G, G->getNodeByIndex(0)) << endl;
+    //mst->printMSTEdges(G);
+    cout<<endl;
+    mst->reset(G);
+    cout << "Using FHeap Scheme"<<endl;
+    mst->setScheme(FHEAP);
+    cout << "Total Spanned Weight "<< mst->spanMinimumTree(G, G->getNodeByIndex(0)) << endl;
+    mst->printMSTEdges(G);
 }

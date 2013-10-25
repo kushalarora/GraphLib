@@ -29,11 +29,7 @@ class Node {
         virtual void populateNode(bool labelled, bool valued, int seed);
         void printNode();
         ~Node();
-        bool operator > (const Node node2) {
-            return this->value > node2.value;
-        }
-        bool operator < (const Node node2) {
-            return this->value < node2.value;
-        }
+        friend ostream& operator <<(ostream& os, const Node& node);
 };
+
 #endif

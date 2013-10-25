@@ -68,5 +68,8 @@ Node::~Node() {
         delete edge;
         edge = tmp;
     }
+}
 
+ostream& operator <<(ostream& os, const Node& node) {
+    os << node.label;
 }

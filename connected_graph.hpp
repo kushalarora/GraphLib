@@ -49,13 +49,13 @@ void ConnectedGraph<T>::createRandomGraph(int nVertices, float density) {
         while((!s.empty()) && s.find(node2) == s.end()) {
             node2 = getNodeByIndex(rand() % nVertices);
         }
-        createEdge(node, node2, (isWeighted() ? rand() % 100 : 0.0));
+        createEdge(node, node2, (isWeighted() ? rand() % 100 + 1: 0.0));
         connected_edges++;
     }
 
     int nEdges = nVertices * (density > 0.0 ? density * nVertices : (rand() % nVertices));
 
-    //createRandomEdges((nEdges - connected_edges), nVertices);
+    createRandomEdges((nEdges - connected_edges), nVertices);
 };
 
 template<class T>
