@@ -11,14 +11,23 @@ Node::Node(int val, string lbl) {
 }
 
 Node::Node(int val) {
-    Node(val, "");
+    value = val;
+    label = "";
+    edge_list = NULL;
+    adj_index = -1;
 }
 Node::Node(string lbl) {
-    Node(-1, lbl);
+    value = -1;
+    label = lbl;
+    edge_list = NULL;
+    adj_index = -1;
 }
 
 Node::Node() {
-    Node(-1, "");
+    value = -1;
+    label = "";
+    edge_list = NULL;
+    adj_index = -1;
 }
 
 Node::Node(Node* node) {
@@ -41,7 +50,7 @@ void Node::printNode() {
     cout << "( ";
     if (this->getLabel().length() > 0)
         cout << getLabel() << " ";
-     if (getValue() > 0)
+    if (getValue() > -1)
          cout << getValue() << " ";
      cout << ")";
 }

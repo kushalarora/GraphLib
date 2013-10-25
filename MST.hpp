@@ -11,7 +11,22 @@ class NodeMST : public Node {
         NodeMST* parent;
 
     public:
-        NodeMST():Node() {
+        NodeMST(){
+            in_tree = false;
+            distance = INT_MAX;
+            parent = NULL;
+        }
+        NodeMST(int value) : Node(value) {
+            in_tree = false;
+            distance = INT_MAX;
+            parent = NULL;
+        }
+        NodeMST(string label): Node(label) {
+            in_tree = false;
+            distance = INT_MAX;
+            parent = NULL;
+        }
+        NodeMST(int value, string label) : Node(value, label) {
             in_tree = false;
             distance = INT_MAX;
             parent = NULL;
