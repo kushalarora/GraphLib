@@ -78,6 +78,7 @@ class Graph {
         int getNVertices() {return nVertices;}
         int getNEdge() {return nEdges;}
         T* getNodeByIndex(int i);
+        void reset();
     private:
         int nVertices;
         int nEdges;
@@ -224,6 +225,12 @@ T* Graph<T>::getNodeByIndex(int i) {
     return edgeNode[i];
 }
 
+template<class T>
+void Graph<T>::reset() {
+    for (int i = 0; i < nVertices; i++) {
+        edgeNode[i]->reset();
+    }
+}
 
 template<class T>
 Graph<T>::~Graph() {

@@ -11,10 +11,14 @@ Node::Node(int val, string lbl) {
 }
 
 Node::Node(int val) {
-    Node(val, NULL);
+    Node(val, "");
 }
 Node::Node(string lbl) {
     Node(-1, lbl);
+}
+
+Node::Node() {
+    Node(-1, "");
 }
 
 Node::Node(Node* node) {

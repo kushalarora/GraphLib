@@ -102,12 +102,6 @@ class MinimumSpanningTree {
         }
 
         void printMSTEdges(Graph<NodeMST>* G);
-
-        void reset(Graph<NodeMST> *G) {
-            for (int i = 0; i < G->getNVertices(); i++) {
-                G->getNodeByIndex(i)->reset();
-            }
-        }
 };
 
 

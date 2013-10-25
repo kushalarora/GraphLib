@@ -13,7 +13,7 @@ class Node {
     string createRandomLabels(int nVertices);
 
     public:
-        Node() {}
+        Node();
         Node(int value);
         Node(string label);
         Node(int value, string label);
@@ -27,7 +27,8 @@ class Node {
         void setAdjecencyIndex(int val) {adj_index = val;}
         int  getAdjecencyIndex() {return adj_index;}
         virtual void populateNode(bool labelled, bool valued, int seed);
-        void printNode();
+        virtual void printNode();
+        virtual void reset() {};
         ~Node();
         friend ostream& operator <<(ostream& os, const Node& node);
 };
