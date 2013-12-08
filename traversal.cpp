@@ -32,3 +32,11 @@ void Traversal::BreadthFirstSearch(Graph<NodeT>* G, NodeT* source) {
         processOnBlack(node);
     }
 }
+
+void Traversal::DepthFirstRoutine(Graph<NodeT>* G, NodeT* source) {
+}
+void Traversal::DepthFirstSearch(Graph<NodeT>* G, NodeT* source) {
+
+}
+
+

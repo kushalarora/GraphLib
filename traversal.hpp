@@ -17,8 +17,6 @@
 
 /*
  * Breadth First Search
- *
- *
  */
 
 
@@ -61,7 +59,6 @@ class Traversal {
             edge->printEdge();
             (edge->getOtherNode())->printNode();
             cout << "\n";
-
         }
         virtual void processOnBlack(NodeT* node) {
             cout << "Node Turned Black ";
@@ -76,12 +73,13 @@ class Traversal {
     public:
         enum SearchAlgo {BFS, DFS};
         void BreadthFirstSearch(Graph<NodeT>* G, NodeT* source);
+        void DepthFirstRoutine(Graph<NodeT>* G, NodeT* source);
+        void DepthFirstSearch(Graph<NodeT>* G, NodeT* source);
         void search(Graph<NodeT>* G, NodeT* source, SearchAlgo algo) {
             if (algo == BFS) {
                 BreadthFirstSearch(G, source);
             } else {
-                // write DFS code
+                DepthFirstSearch(G, source);
             }
         }
 };
-
