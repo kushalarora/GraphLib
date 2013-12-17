@@ -1,5 +1,5 @@
-#include "MST.hpp"
-#include "connected_graph.hpp"
+#include "../MST.hpp"
+#include "../graph/connected_graph.hpp"
 #include<time.h>
 #include<fstream>
 #include<string>

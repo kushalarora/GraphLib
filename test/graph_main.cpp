@@ -1,5 +1,5 @@
-#include "graph.hpp"
-#include "node.hpp"
+#include "../graph/graph.hpp"
+#include "../graph/node.hpp"
 
 int main(int argc, char *argv[]) {
     if (argc > 1)

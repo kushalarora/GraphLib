@@ -11,9 +11,9 @@
 
 #include<iostream>
 #include<queue>
-#include "graph.hpp"
-#include "node.hpp"
-#include "edge.hpp"
+#include "graph/graph.hpp"
+#include "graph/node.hpp"
+#include "graph/edge.hpp"
 
 /*
  * Breadth First Search

@@ -1,7 +1,7 @@
 #include<iostream>
 using namespace std;
 
-#include "graph.hpp"
+#include "graph/graph.hpp"
 #include "../DataStructures/FibonacciHeap.hpp"
 #include<limits.h>
 class NodeMST : public Node {
