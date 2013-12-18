@@ -9,14 +9,9 @@ template<typename T>class Edge;
 
 template<typename T>
 class Node {
-    string label;   // labels are unique
-    T* value_ptr;      // need not be unique
-    Edge<T>* edge_list;     // linked list of edges.
-    bool operator ==(Node* node2);
-    int adj_index;
-    string createRandomLabels(int nVertices);
 
     public:
+        Node* getSource() {return source;}
         Node();
         Node(T value);
         Node(string label);
@@ -35,6 +30,40 @@ class Node {
         virtual void reset() {};
         ~Node();
         friend ostream& operator <<(ostream& os, const Node& node);
+
+        // Traversal Specific
+        enum COLOR {WHITE, GRAY, BLACK};
+        COLOR getColor() {return color;}
+        Node* getParent(Node* node) {return parent;}
+
+        // BFS specific
+        int getDist2Source(){return dist2s;}
+
+        void setColor(COLOR color) {this->color = color;}
+        void setParent(Node* node) {this->parent = node;}
+        void setSource(Node* node) {this->source = node;}
+        void setDist2Source(int dist) {this->dist2s = dist;}
+
+    private:
+        string label;   // labels are unique
+        T* value_ptr;      // need not be unique
+        Edge<T>* edge_list;     // linked list of edges.
+        bool operator ==(Node* node2);
+        int adj_index;
+
+        // Traversal Specific Variabls
+        COLOR color;
+        Node* parent;
+        Node* source;
+
+        // Populated with BFS
+        int dist2s;
+
+        // Populated while DFS
+        int entry_index;    // Global Count of nodes processed, when encountered
+        int exit_index;     // Global count of nodes when blackened.
+
+        string createRandomLabels(int nVertices);
 };
 
 
@@ -44,6 +73,14 @@ Node<T>::Node(T val, string lbl) {
     label = lbl;
     edge_list = NULL;
     adj_index = -1;
+
+    // Traversal Specific
+    color = WHITE;
+    parent = NULL;
+    source = NULL;
+
+    // BFS specific
+    dist2s = -1;
 }
 
 template<typename T>

@@ -51,6 +51,7 @@
 #include<stdlib.h>     // for rand()
 #include<time.h>
 #include<assert.h>
+#include<queue>
 
 #include "edge.hpp"
 #include "node.hpp"
@@ -79,6 +80,12 @@ class Graph {
         int getNEdge() {return nEdges;}
         V* getNodeByIndex(int i);
         void reset();
+
+        // Traversal Specific functions
+        void BreadthFirstSearch(V* source);
+        void DepthFirstRoutine();
+        void DepthFirstSearch();
+
     private:
         int nVertices;
         int nEdges;
@@ -90,9 +97,24 @@ class Graph {
         V* edgeNode[MAXV];
     protected:
         virtual void createRandomEdges(int nEdges, int nVertices);
+        virtual void processEdge(E* edge) {
+            cout << "Processed Edge";
+            (edge->getCurrentNode())->printNode();
+            edge->printEdge();
+            (edge->getOtherNode())->printNode();
+            cout << "\n";
+        }
+        virtual void processOnBlack(V* node) {
+            cout << "Node Turned Black ";
+            node->printNode();
+            cout << "\n";
+        };
+        virtual void processOnGrey(V* node) {
+            cout << "Node turned Grey ";
+            node->printNode();
+            cout << "\n";
+        }
 };
-
-
 
 template<class V, class E>
 Graph<V,E>::Graph(bool dirctd, bool wghtd, bool lbled, bool valed) {
@@ -236,6 +258,39 @@ template<class V, class E>
 Graph<V,E>::~Graph() {
     for (int i = 0; i < nVertices; i++) {
         delete edgeNode[i];
+    }
+}
+
+template<class V, class E>
+void Graph<V,E>::BreadthFirstSearch(V* source) {
+    queue<V*> q;
+    source->setColor(V::GRAY);
+    E* edge;
+    V* node;
+    V* other;
+    typename V::COLOR clr;
+    q.push(source);
+    while(!q.empty()) {
+        node = q.front();
+        processOnGrey(node);
+        assert(node != NULL);
+        edge = node->getEdgeList();
+        while(edge != NULL) {
+            assert(edge->getCurrentNode() == node);
+            other = (V*)edge->getOtherNode();
+            clr = other->getColor();
+            if (clr == V::WHITE) {
+                processEdge(edge);
+                other->setColor(V::GRAY);
+                other->setDist2Source(other->getDist2Source() + 1);
+                other->setParent(node);
+                q.push(other);
+            }
+            edge = edge->getNext();
+        }
+        q.pop();
+        node->setColor(V::BLACK);
+        processOnBlack(node);
     }
 }
 #endif

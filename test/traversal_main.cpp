@@ -1,7 +1,7 @@
-#include "traversal.hpp"
+#include "../graph/graph.hpp"
 
 int main(int argc, char** argv) {
-    Graph<NodeT> g = Graph<NodeT>(false, false, true, true);
+    Graph< Node<int>, Edge<int> > g = Graph< Node<int>, Edge<int> >(false, false, true, true);
 /*    Node4BFS* n[10];
     for (int i = 0; i < 10; i++) {
         n[i] = new Node4BFS();
@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
         g.createEdge(n[rand() % 10], n[rand() % 10]);
     }
     */
-    g.createRandomGraph(10);
+    g.createRandomGraph(5);
     g.printGraph();
     cout<<endl<<endl;
-    Traversal().search(&g, g.getNodeByIndex(1), Traversal::BFS);
+    g.BreadthFirstSearch(g.getNodeByIndex(0));
 }
