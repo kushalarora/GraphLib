@@ -7,33 +7,33 @@
 #define __CONNECTED_GRAPH__
 #include "graph.hpp"
 #include<set>
-template<class T>
-class ConnectedGraph : public Graph<T> {
+template<class Node, class Edge>
+class ConnectedGraph : public Graph<Node, Edge> {
     private:
-        using Graph<T>::createRandomEdges;
+        using Graph<Node, Edge>::createRandomEdges;
     public:
         // http://stackoverflow.com/questions/2812470/why-does-gcc-need-extra-declarations-in-templates-when-vs-does-not
-        using Graph<T>::isLabelled;
-        using Graph<T>::isValued;
-        using Graph<T>::isWeighted;
-        using Graph<T>::insertNode;
-        using Graph<T>::createEdge;
-        using Graph<T>::getNodeByIndex;
-        ConnectedGraph():Graph<T>() {};
-        ConnectedGraph(bool directed, bool weighted, bool labelled, bool valued) : Graph<T>(directed, weighted, labelled, valued) {};
+        using Graph<Node, Edge>::isLabelled;
+        using Graph<Node, Edge>::isValued;
+        using Graph<Node, Edge>::isWeighted;
+        using Graph<Node, Edge>::insertNode;
+        using Graph<Node, Edge>::createEdge;
+        using Graph<Node, Edge>::getNodeByIndex;
+        ConnectedGraph():Graph<Node, Edge>() {};
+        ConnectedGraph(bool directed, bool weighted, bool labelled, bool valued) : Graph<Node, Edge>(directed, weighted, labelled, valued) {};
         void createRandomGraph(int nVertices);
         void createRandomGraph(int nVertices, float density);
 };
 
 
-template<class T>
-void ConnectedGraph<T>::createRandomGraph(int nVertices, float density) {
+template<class Node, class Edge>
+void ConnectedGraph<Node, Edge>::createRandomGraph(int nVertices, float density) {
     srand(time(NULL));
     if (nVertices < 1)
         return;
-    set<T*> s;
+    set<Node*> s;
     for (int i = 0; i < nVertices; i++) {
-        T* node = new T();
+        Node* node = new Node();
         node->populateNode(isLabelled(), isValued(), nVertices);
         insertNode(node);
         s.insert(node);
@@ -41,10 +41,10 @@ void ConnectedGraph<T>::createRandomGraph(int nVertices, float density) {
     int connected_edges = 0;
     while (!s.empty()) {
         // get the first element in set and remove it from set.
-        T* node = *(s.begin());
+        Node* node = *(s.begin());
         s.erase(node);
 
-        T* node2 = getNodeByIndex(rand() % nVertices);
+        Node* node2 = getNodeByIndex(rand() % nVertices);
         // keep looking for node until you find one from unvisited set.
         while((!s.empty()) && s.find(node2) == s.end()) {
             node2 = getNodeByIndex(rand() % nVertices);
@@ -58,8 +58,8 @@ void ConnectedGraph<T>::createRandomGraph(int nVertices, float density) {
     createRandomEdges((nEdges - connected_edges), nVertices);
 };
 
-template<class T>
-void ConnectedGraph<T>::createRandomGraph(int nVertices) {
+template<class Node, class Edge>
+void ConnectedGraph<Node, Edge>::createRandomGraph(int nVertices) {
     createRandomGraph(nVertices, 0.0);
 }
 #endif

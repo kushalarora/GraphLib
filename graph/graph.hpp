@@ -59,15 +59,15 @@ using namespace std;
 #define __GRAPH__
 const int MAXV = 100000;
 
-template<class T>
+template<class V, class E>
 class Graph {
     public:
         Graph();
         ~Graph();
         Graph(bool directed, bool weighted, bool labelled, bool valued);
-        Node<T>* insertNode(Node<T>* node);
-        void createEdge(Node<T>* V1, Node<T>* V2);
-        void createEdge(Node<T>* V1, Node<T>* V2, float weight);
+        V* insertNode(V* node);
+        void createEdge(V* V1, V* V2);
+        void createEdge(V* V1, V* V2, float weight);
         inline bool isWeighted() {return weighted;}
         inline bool isDirected() {return directed;}
         inline bool isLabelled() {return labelled;}
@@ -77,7 +77,7 @@ class Graph {
         virtual void createRandomGraph(int nVertices, float density);
         int getNVertices() {return nVertices;}
         int getNEdge() {return nEdges;}
-        Node<T>* getNodeByIndex(int i);
+        V* getNodeByIndex(int i);
         void reset();
     private:
         int nVertices;
@@ -87,15 +87,15 @@ class Graph {
         bool labelled;
         bool valued;
         int degree[MAXV];
-        Node<T>* edgeNode[MAXV];
+        V* edgeNode[MAXV];
     protected:
         virtual void createRandomEdges(int nEdges, int nVertices);
 };
 
 
 
-template<class T>
-Graph<T>::Graph(bool dirctd, bool wghtd, bool lbled, bool valed) {
+template<class V, class E>
+Graph<V,E>::Graph(bool dirctd, bool wghtd, bool lbled, bool valed) {
     nVertices = 0;
     nEdges = 0;
     for (int i = 0; i < MAXV; i++) {
@@ -107,14 +107,14 @@ Graph<T>::Graph(bool dirctd, bool wghtd, bool lbled, bool valed) {
     labelled = lbled;
     valued = valed;
 }
-template<class T>
-Graph<T>::Graph() {
+template<class V, class E>
+Graph<V,E>::Graph() {
     Graph(false, false, false, false);
 }
 
 
-template<class T>
-Node<T>* Graph<T>::insertNode(Node<T>* node) {
+template<class V, class E>
+V* Graph<V,E>::insertNode(V* node) {
     int i;
     for (i = 0; i < nVertices; i++) {
         if (edgeNode[i] == node)
@@ -129,24 +129,24 @@ Node<T>* Graph<T>::insertNode(Node<T>* node) {
 }
 
 
-template<class T>
-void Graph<T>::createEdge(Node<T>* V1, Node<T>* V2, float weight) {
-    Node<T>* nodeArr[2] = {V1, V2};
-    Edge<T>* newEdge;
-    Edge<T>* temp;
+template<class V, class E>
+void Graph<V,E>::createEdge(V* V1, V* V2, float weight) {
+    V* nodeArr[2] = {V1, V2};
+    E* newEdge;
+    E* temp;
     int i = 0, idx = 0;
     // ensure that both nodes were inserted into graph.
     assert(V1->getAdjecencyIndex() != -1);
     assert(V2->getAdjecencyIndex() != -1);
 
     for (i = 0; i < (isDirected() ? 1: 2); i++, degree[idx]++, idx = 1 - idx) {
-        Node<T>* currNode = nodeArr[idx];
-        Node<T>* othrNode = nodeArr[1 - idx];
-        newEdge = new Edge<T>((Node<T>*)currNode, (Node<T>*)othrNode, isDirected(), weight);
+        V* currNode = nodeArr[idx];
+        V* othrNode = nodeArr[1 - idx];
+        newEdge = new E((V*)currNode, (V*)othrNode, isDirected(), weight);
 
         // inserting edge to v2 in v1
         temp = currNode->getEdgeList();
-        Edge<T>* prevEdge = temp;
+        E* prevEdge = temp;
         while(temp != NULL) {
             // if V2 already present do nothing.
             if (temp->getOtherNode() == nodeArr[1 - idx])
@@ -162,17 +162,17 @@ void Graph<T>::createEdge(Node<T>* V1, Node<T>* V2, float weight) {
     nEdges++;
 }
 
-template<class T>
-void Graph<T>::createEdge(Node<T>* V1, Node<T>* V2) {
+template<class V, class E>
+void Graph<V,E>::createEdge(V* V1, V* V2) {
     createEdge(V1, V2, 0);
 }
 
-template<class T>
-void Graph<T>::printGraph() {
+template<class V, class E>
+void Graph<V,E>::printGraph() {
     for (int i = 0; i < nVertices; i++) {
-        Node<T>* node = edgeNode[i];
+        V* node = edgeNode[i];
         node->printNode();
-        Edge<T>* tmp = node->getEdgeList();
+        E* tmp = node->getEdgeList();
         while (tmp != NULL) {
             assert(tmp->getCurrentNode() == node);
             tmp->printEdge();
@@ -183,8 +183,8 @@ void Graph<T>::printGraph() {
     }
 }
 
-template<class T>
-void Graph<T>::createRandomEdges(int nEdges, int nVertices) {
+template<class V, class E>
+void Graph<V,E>::createRandomEdges(int nEdges, int nVertices) {
 #ifdef DEBUG
     cout<<"\nMaking "<<nEdges<<" Edges\n";
 #endif
@@ -200,40 +200,40 @@ void Graph<T>::createRandomEdges(int nEdges, int nVertices) {
     }
 }
 
-template<class T>
-void Graph<T>::createRandomGraph(int nVertices, float density) {
+template<class V, class E>
+void Graph<V,E>::createRandomGraph(int nVertices, float density) {
     srand(time(NULL));
     if (nVertices < 1)
         return;
     for (int i = 0; i < nVertices; i++) {
-        Node<T>* node = new Node<T>();
+        V* node = new V();
         node->populateNode(isLabelled(), isValued(), nVertices);
         insertNode(node);
     }
     createRandomEdges(nVertices * (density > 0.0 ? density * nVertices : (rand() % nVertices)), nVertices);
 }
 
-template<class T>
-void Graph<T>::createRandomGraph(int nVertices) {
+template<class V, class E>
+void Graph<V,E>::createRandomGraph(int nVertices) {
     createRandomGraph(nVertices, 0.0);
 }
 
-template<class T>
-Node<T>* Graph<T>::getNodeByIndex(int i) {
+template<class V, class E>
+V* Graph<V,E>::getNodeByIndex(int i) {
     if (i < 0 || i >= nVertices)
         return NULL;
     return edgeNode[i];
 }
 
-template<class T>
-void Graph<T>::reset() {
+template<class V, class E>
+void Graph<V,E>::reset() {
     for (int i = 0; i < nVertices; i++) {
         edgeNode[i]->reset();
     }
 }
 
-template<class T>
-Graph<T>::~Graph() {
+template<class V, class E>
+Graph<V,E>::~Graph() {
     for (int i = 0; i < nVertices; i++) {
         delete edgeNode[i];
     }

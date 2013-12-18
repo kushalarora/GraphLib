@@ -8,7 +8,7 @@
 */
 
 #include "traversal.hpp"
-#include "connected_graph.hpp"
+#include "graph/connected_graph.hpp"
 
 int connected_component(Graph<NodeT>* g) {
     int c = 0;
