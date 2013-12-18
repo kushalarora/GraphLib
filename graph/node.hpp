@@ -27,7 +27,7 @@ class Node {
         int  getAdjecencyIndex() {return adj_index;}
         virtual void populateNode(bool labelled, bool valued, int seed);
         virtual void printNode();
-        virtual void reset() {};
+        virtual void reset();
         ~Node();
         friend ostream& operator <<(ostream& os, const Node& node);
 
@@ -36,13 +36,20 @@ class Node {
         COLOR getColor() {return color;}
         Node* getParent(Node* node) {return parent;}
 
-        // BFS specific
-        int getDist2Source(){return dist2s;}
-
         void setColor(COLOR color) {this->color = color;}
         void setParent(Node* node) {this->parent = node;}
         void setSource(Node* node) {this->source = node;}
+
+        // BFS specific
+        int getDist2Source(){return dist2s;}
         void setDist2Source(int dist) {this->dist2s = dist;}
+
+        // DFS Specific
+        void getEntryTime() { return entry_index;}
+        void setEntryTime(int entry_idx) { entry_index = entry_idx;}
+
+        void getExitTime() { return exit_index;}
+        void setExitTime(int exit_idx) { exit_index = exit_idx;}
 
     private:
         string label;   // labels are unique
@@ -81,6 +88,24 @@ Node<T>::Node(T val, string lbl) {
 
     // BFS specific
     dist2s = -1;
+
+    // DFS specific
+    entry_index = -1;
+    exit_index = -1;
+}
+
+template<typename T>
+void Node<T>::reset() {
+    color = WHITE;
+    parent = NULL;
+    source = NULL;
+
+    // BFS specific
+    dist2s = -1;
+
+    // DFS specific
+    entry_index = -1;
+    exit_index = -1;
 }
 
 template<typename T>

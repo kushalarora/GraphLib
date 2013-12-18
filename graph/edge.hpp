@@ -8,13 +8,9 @@ template<typename T> class Node;
 
 template<typename T>
 class Edge {
-    Node<T>* node1;
-    Node<T>* node2;
-    bool is_directed;
-    float weight;
-    Edge<T>* next;
-    const static float DEFAULT_WEIGHT = 0.0f;
     public:
+        static int getId() { return count++;}
+        enum EDGE_TYPE {NA, TREE_EDGE, BACK_EDGE, FORWARD_EDGE, CROSS_EDGE};
         Edge(Node<T>* n1, Node<T>* n2);
         Edge(Node<T>* n1, Node<T>* n2, bool is_directed, float weight);
         Edge(Node<T>* n1, Node<T>* n2, bool is_directed);
@@ -27,7 +23,24 @@ class Edge {
         float getWeight() {return weight;}
         bool operator ==(Edge<T>* edge2);
         void printEdge();
+        void getEdgeType() { return type;}
+        void setEdgeType(EDGE_TYPE edge_type) { this->type = edge_type;}
+        void setId(int Id) { id = Id;}
+
+    private:
+        Node<T>* node1;
+        Node<T>* node2;
+        bool is_directed;
+        float weight;
+        Edge<T>* next;
+        const static float DEFAULT_WEIGHT = 0.0f;
+        static int count;
+        EDGE_TYPE type;
+        int id;
 };
+
+template<typename T>
+int Edge<T>::count = 0;
 
 template<typename T>
 Edge<T>::Edge(Node<T>* n1, Node<T>* n2, bool is_directed, float weight) {
@@ -36,14 +49,17 @@ Edge<T>::Edge(Node<T>* n1, Node<T>* n2, bool is_directed, float weight) {
     this->is_directed = is_directed;
     this->weight = weight;
     this->next = NULL;
+    id = -1;
+    type = NA;
 }
 
 template<typename T>
 void Edge<T>::printEdge() {
     cout << (isDirected() ? "--" : "<--");
+    cout << " " << id;
     if (getWeight() != DEFAULT_WEIGHT)
-        cout << getWeight();
-    cout << "-->";
+        cout << ", " << getWeight();
+    cout <<" "<< "-->";
 }
 
 template<typename T>

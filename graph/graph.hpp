@@ -83,7 +83,7 @@ class Graph {
 
         // Traversal Specific functions
         void BreadthFirstSearch(V* source);
-        void DepthFirstRoutine();
+        void DepthFirstRoutine(V* node);
         void DepthFirstSearch();
 
     private:
@@ -161,11 +161,12 @@ void Graph<V,E>::createEdge(V* V1, V* V2, float weight) {
     assert(V1->getAdjecencyIndex() != -1);
     assert(V2->getAdjecencyIndex() != -1);
 
+    int id = E::getId();
     for (i = 0; i < (isDirected() ? 1: 2); i++, degree[idx]++, idx = 1 - idx) {
         V* currNode = nodeArr[idx];
         V* othrNode = nodeArr[1 - idx];
         newEdge = new E((V*)currNode, (V*)othrNode, isDirected(), weight);
-
+        newEdge->setId(id);
         // inserting edge to v2 in v1
         temp = currNode->getEdgeList();
         E* prevEdge = temp;
@@ -291,6 +292,43 @@ void Graph<V,E>::BreadthFirstSearch(V* source) {
         q.pop();
         node->setColor(V::BLACK);
         processOnBlack(node);
+    }
+}
+
+template<class V, class E>
+void Graph<V,E>::DepthFirstRoutine(V* node) {
+    static int count = 0;
+    E* edge_list = node->getEdgeList();
+    E* edge = edge_list;
+    V* other;
+
+    node->setEntryTime(count++);
+    node->setColor(V::GRAY);
+    processOnGrey(node);
+    while(edge != NULL) {
+        other = (V*)edge->getOtherNode();
+        assert(other != NULL);
+
+        if (other->getColor() == V::WHITE) {
+            processEdge(edge);
+            other->setParent(node);
+            DepthFirstRoutine(other);
+        }
+        edge = edge->getNext();
+    }
+
+    node->setExitTime(count++);
+    node->setColor(V::BLACK);
+    processOnBlack(node);
+}
+
+template<class V, class E>
+void Graph<V,E>::DepthFirstSearch() {
+    static int count = 0;
+    for (int i = 0; i < getNVertices(); i++) {
+        V* node = getNodeByIndex(i);
+        if (node->getColor() == V::WHITE)
+            DepthFirstRoutine(node);
     }
 }
 #endif
