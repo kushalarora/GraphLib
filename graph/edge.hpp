@@ -9,7 +9,7 @@ template<typename T> class Node;
 template<typename T>
 class Edge {
     public:
-        static int getId() { return count++;}
+        static int getNewId() { return count++;}
         enum EDGE_TYPE {NA, TREE_EDGE, BACK_EDGE, FORWARD_EDGE, CROSS_EDGE};
         Edge(Node<T>* n1, Node<T>* n2);
         Edge(Node<T>* n1, Node<T>* n2, bool is_directed, float weight);
@@ -23,9 +23,10 @@ class Edge {
         float getWeight() {return weight;}
         bool operator ==(Edge<T>* edge2);
         void printEdge();
-        void getEdgeType() { return type;}
-        void setEdgeType(EDGE_TYPE edge_type) { this->type = edge_type;}
+        EDGE_TYPE getType() { return type;}
+        void setType(EDGE_TYPE edge_type) { this->type = edge_type;}
         void setId(int Id) { id = Id;}
+        int getId() { return id;}
 
     private:
         Node<T>* node1;

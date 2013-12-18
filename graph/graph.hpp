@@ -52,6 +52,7 @@
 #include<time.h>
 #include<assert.h>
 #include<queue>
+#include<map>
 
 #include "edge.hpp"
 #include "node.hpp"
@@ -103,6 +104,7 @@ class Graph {
             edge->printEdge();
             (edge->getOtherNode())->printNode();
             cout << "\n";
+            cout << "Edge turned " << edge->getType() << endl;
         }
         virtual void processOnBlack(V* node) {
             cout << "Node Turned Black ";
@@ -161,7 +163,7 @@ void Graph<V,E>::createEdge(V* V1, V* V2, float weight) {
     assert(V1->getAdjecencyIndex() != -1);
     assert(V2->getAdjecencyIndex() != -1);
 
-    int id = E::getId();
+    int id = E::getNewId();
     for (i = 0; i < (isDirected() ? 1: 2); i++, degree[idx]++, idx = 1 - idx) {
         V* currNode = nodeArr[idx];
         V* othrNode = nodeArr[1 - idx];
@@ -281,7 +283,6 @@ void Graph<V,E>::BreadthFirstSearch(V* source) {
             other = (V*)edge->getOtherNode();
             clr = other->getColor();
             if (clr == V::WHITE) {
-                processEdge(edge);
                 other->setColor(V::GRAY);
                 other->setDist2Source(other->getDist2Source() + 1);
                 other->setParent(node);
@@ -301,16 +302,46 @@ void Graph<V,E>::DepthFirstRoutine(V* node) {
     E* edge_list = node->getEdgeList();
     E* edge = edge_list;
     V* other;
-
+    map<int, E*> edge_mp;
     node->setEntryTime(count++);
     node->setColor(V::GRAY);
     processOnGrey(node);
     while(edge != NULL) {
+        int edge_id = edge->getId();
+        typename map<int, E*>::iterator it = edge_mp.find(edge_id);
+
         other = (V*)edge->getOtherNode();
+        typename V::COLOR clr = other->getColor();
+
+        if (it == edge_mp.end()) {
+            edge_mp[edge_id] = edge;
+
+            if (clr == V::WHITE)
+                edge->setType(E::TREE_EDGE);
+            else if (clr == V::GRAY)
+                edge->setType(E::BACK_EDGE);
+            else {
+                int node_entry_tm = node->getEntryTime();
+                int other_entry_tm = other->getEntryTime();
+
+                if (node_entry_tm < other_entry_tm)
+                    edge->setType(E::FORWARD_EDGE);
+                else
+                    edge->setType(E::CROSS_EDGE);
+            }
+        } else {
+            // This means graph is undirected.
+            assert (!isDirected());
+            E* tmp = it->second;
+            assert(tmp != NULL);
+
+            edge->setType(tmp->getType());
+        }
+
+        processEdge(edge);
         assert(other != NULL);
 
-        if (other->getColor() == V::WHITE) {
-            processEdge(edge);
+        if (clr == V::WHITE) {
             other->setParent(node);
             DepthFirstRoutine(other);
         }

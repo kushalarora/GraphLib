@@ -45,10 +45,10 @@ class Node {
         void setDist2Source(int dist) {this->dist2s = dist;}
 
         // DFS Specific
-        void getEntryTime() { return entry_index;}
+        int getEntryTime() { return entry_index;}
         void setEntryTime(int entry_idx) { entry_index = entry_idx;}
 
-        void getExitTime() { return exit_index;}
+        int getExitTime() { return exit_index;}
         void setExitTime(int exit_idx) { exit_index = exit_idx;}
 
     private:
