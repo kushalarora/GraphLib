@@ -77,10 +77,12 @@ class Graph {
         virtual void printGraph();
         virtual void createRandomGraph(int nVertices);
         virtual void createRandomGraph(int nVertices, float density);
+        virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic);
         int getNVertices() {return nVertices;}
         int getNEdge() {return nEdges;}
         V* getNodeByIndex(int i);
         void reset();
+        bool isCyclic();
 
         // Traversal Specific functions
         void BreadthFirstSearch(V* source);
@@ -97,7 +99,7 @@ class Graph {
         int degree[MAXV];
         V* edgeNode[MAXV];
     protected:
-        virtual void createRandomEdges(int nEdges, int nVertices);
+        virtual void createRandomEdges(int nEdges, int nVertices, bool ensure_acyclic);
         virtual void processEdge(E* edge) {
             cout << "Processed Edge";
             (edge->getCurrentNode())->printNode();
@@ -140,6 +142,7 @@ Graph<V,E>::Graph() {
 template<class V, class E>
 V* Graph<V,E>::insertNode(V* node) {
     int i;
+    int id = node->assignId();
     for (i = 0; i < nVertices; i++) {
         if (edgeNode[i] == node)
             // node already present
@@ -209,7 +212,7 @@ void Graph<V,E>::printGraph() {
 }
 
 template<class V, class E>
-void Graph<V,E>::createRandomEdges(int nEdges, int nVertices) {
+void Graph<V,E>::createRandomEdges(int nEdges, int nVertices, bool ensure_acyclic) {
 #ifdef DEBUG
     cout<<"\nMaking "<<nEdges<<" Edges\n";
 #endif
@@ -220,13 +223,20 @@ void Graph<V,E>::createRandomEdges(int nEdges, int nVertices) {
         // ensures that there are no self loops
         while (idx1 == idx2)
             idx2 = rand() % nVertices;
-        createEdge(edgeNode[idx1], edgeNode[idx2], (isWeighted() ? rand() % 100  + 1: 0.0));
+
+        V* node1 = edgeNode[idx1];
+        V* node2 = edgeNode[idx2];
+
+        if (node1->getId() < node2->getId() || !ensure_acyclic)
+            createEdge(node1, node2, (isWeighted() ? rand() % 100  + 1: 0.0));
+        else
+            createEdge(node2, node1, (isWeighted() ? rand() % 100  + 1: 0.0));
         //printNode(edgeNode[idx1]);printEdge(edgeNode[idx2]);printNode(edgeNode[idx2]);
     }
 }
 
 template<class V, class E>
-void Graph<V,E>::createRandomGraph(int nVertices, float density) {
+void Graph<V,E>::createRandomGraph(int nVertices, float density, bool strictly_acyclic) {
     srand(time(NULL));
     if (nVertices < 1)
         return;
@@ -235,12 +245,17 @@ void Graph<V,E>::createRandomGraph(int nVertices, float density) {
         node->populateNode(isLabelled(), isValued(), nVertices);
         insertNode(node);
     }
-    createRandomEdges(nVertices * (density > 0.0 ? density * nVertices : (rand() % nVertices)), nVertices);
+    createRandomEdges(nVertices * (density > 0.0 ? density * nVertices : (rand() % nVertices)), nVertices, strictly_acyclic);
+}
+
+template<class V, class E>
+void Graph<V,E>::createRandomGraph(int nVertices, float density) {
+    createRandomGraph(nVertices, density, false);
 }
 
 template<class V, class E>
 void Graph<V,E>::createRandomGraph(int nVertices) {
-    createRandomGraph(nVertices, 0.0);
+    createRandomGraph(nVertices, 0.0, false);
 }
 
 template<class V, class E>
@@ -302,7 +317,7 @@ void Graph<V,E>::DepthFirstRoutine(V* node) {
     E* edge_list = node->getEdgeList();
     E* edge = edge_list;
     V* other;
-    map<int, E*> edge_mp;
+    static map<int, E*> edge_mp;
     node->setEntryTime(count++);
     node->setColor(V::GRAY);
     processOnGrey(node);
@@ -360,6 +375,26 @@ void Graph<V,E>::DepthFirstSearch() {
         V* node = getNodeByIndex(i);
         if (node->getColor() == V::WHITE)
             DepthFirstRoutine(node);
+    }
+}
+
+template<class V, class E>
+bool Graph<V,E>::isCyclic() {
+    DepthFirstSearch();
+    for (int i = 0; i < getNVertices(); i++) {
+        V* node = getNodeByIndex(i);
+        assert(node != NULL);
+
+        E* edge_list = node->getEdgeList();
+        assert(edge_list != NULL);
+
+        E* edge = edge_list;
+        while(edge != NULL) {
+            if (edge->getType() == E::BACK_EDGE)
+                return true;
+            edge = edge->getNext();
+        }
+        return false;
     }
 }
 #endif

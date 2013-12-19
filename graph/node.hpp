@@ -17,6 +17,7 @@ class Node {
         Node(string label);
         Node(T value, string label);
         Node(Node* node);
+        int getId() {return id;}
         T getValue() {return *value_ptr;}
         void setValue(T val) {value_ptr = &val;}
         Edge<T>* getEdgeList() {return edge_list;}
@@ -30,6 +31,8 @@ class Node {
         virtual void reset();
         ~Node();
         friend ostream& operator <<(ostream& os, const Node& node);
+        static int getNewId() {return count++;}
+        int assignId() { id = getNewId();}
 
         // Traversal Specific
         enum COLOR {WHITE, GRAY, BLACK};
@@ -57,6 +60,8 @@ class Node {
         Edge<T>* edge_list;     // linked list of edges.
         bool operator ==(Node* node2);
         int adj_index;
+        int id;
+        static int count;
 
         // Traversal Specific Variabls
         COLOR color;
@@ -73,6 +78,8 @@ class Node {
         string createRandomLabels(int nVertices);
 };
 
+template<typename T>
+int Node<T>::count = 0;
 
 template<typename T>
 Node<T>::Node(T val, string lbl) {
@@ -92,6 +99,8 @@ Node<T>::Node(T val, string lbl) {
     // DFS specific
     entry_index = -1;
     exit_index = -1;
+
+    id = -1;
 }
 
 template<typename T>
@@ -143,7 +152,7 @@ bool Node<T>::operator==(Node<T>* node2) {
 
 template<typename T>
 void Node<T>::printNode() {
-    cout << "( ";
+    cout << "( " << getId() << " ";
     if (this->getLabel().length() > 0)
         cout << getLabel() << " ";
     if (getValue() > -1)

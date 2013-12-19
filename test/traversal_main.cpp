@@ -1,7 +1,7 @@
 #include "../graph/graph.hpp"
 
 int main(int argc, char** argv) {
-    Graph< Node<int>, Edge<int> > g = Graph< Node<int>, Edge<int> >(false, false, true, true);
+    Graph< Node<int>, Edge<int> > g = Graph< Node<int>, Edge<int> >(true, false, true, true);
 /*    Node4BFS* n[10];
     for (int i = 0; i < 10; i++) {
         n[i] = new Node4BFS();
@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
         g.createEdge(n[rand() % 10], n[rand() % 10]);
     }
     */
-    g.createRandomGraph(5, 0.3);
+    g.createRandomGraph(5, 0.6);
     g.printGraph();
     cout<<endl<<endl<<"BFS"<<endl;
     g.BreadthFirstSearch(g.getNodeByIndex(0));
