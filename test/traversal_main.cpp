@@ -20,12 +20,16 @@ int main(int argc, char** argv) {
         g.createEdge(n[rand() % 10], n[rand() % 10]);
     }
     */
-    g.createRandomGraph(5, 0.6);
+    g.createRandomGraph(20, 0.20, true);
     g.printGraph();
     cout<<endl<<endl<<"BFS"<<endl;
     g.BreadthFirstSearch(g.getNodeByIndex(0));
 
     g.reset();
     cout<<endl<<endl<<"DFS"<<endl;
-    g.DepthFirstSearch();
+    //g.DepthFirstSearch();
+
+
+    g.reset();
+    g.topsort();
 }

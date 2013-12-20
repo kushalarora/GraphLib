@@ -83,6 +83,7 @@ class Graph {
         V* getNodeByIndex(int i);
         void reset();
         bool isCyclic();
+        void topsort();
 
         // Traversal Specific functions
         void BreadthFirstSearch(V* source);
@@ -98,6 +99,7 @@ class Graph {
         bool valued;
         int degree[MAXV];
         V* edgeNode[MAXV];
+        void sort(int start, int end);
     protected:
         virtual void createRandomEdges(int nEdges, int nVertices, bool ensure_acyclic);
         virtual void processEdge(E* edge) {
@@ -363,7 +365,7 @@ void Graph<V,E>::DepthFirstRoutine(V* node) {
         edge = edge->getNext();
     }
 
-    node->setExitTime(count++);
+    node->setExitTime(count);
     node->setColor(V::BLACK);
     processOnBlack(node);
 }
@@ -397,4 +399,45 @@ bool Graph<V,E>::isCyclic() {
         return false;
     }
 }
+
+template<class V, class E>
+void Graph<V, E>::sort(int start, int end) {
+    if (start < end) {
+        int pivot = start + rand() % (end - start);
+        swap<V*>(edgeNode[start], edgeNode[pivot]);
+        int i = start + 1, j = end;
+        while(i <= j) {
+            if (edgeNode[i]->getExitTime() < edgeNode[start]->getExitTime()) {
+                i++;
+            } else {
+                swap<V*>(edgeNode[i], edgeNode[j]);
+                j--;
+            }
+        }
+        swap<V*>(edgeNode[start], edgeNode[i - 1]);
+        sort(start, i - 2);
+        sort(i, end);
+    }
+}
+
+template<class V, class E>
+void Graph<V,E>::topsort() {
+    // Do depth first search to calculate exit Time.
+    DepthFirstSearch();
+
+#ifdef DEBUG
+    for (int i = 0; i < getNVertices(); i++)
+        edgeNode[i]->printNode();
+    cout << endl;
+#endif
+
+    sort(0, getNVertices() - 1);
+
+#ifdef DEBUG
+    for (int i = 0; i < getNVertices(); i++)
+        edgeNode[i]->printNode();
+    cout << endl;
+#endif
+}
+
 #endif
