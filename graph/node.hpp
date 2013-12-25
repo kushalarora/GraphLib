@@ -18,11 +18,10 @@ class Node {
         Node(T& value, string label);
         Node(const Node& node);
 
-        Node* getSource() const {return source;}
+        Node& getSource() const {return source;}
         int getId() const {return id;}
         T& getValue() const {return value;}
         Edge<T>* getEdgeList() const {return edge_list;}
-        Edge<T>* setEdgeList(Edge<T>* edge) {edge_list = edge;}
         string getLabel() const {return label;}
         int  getAdjecencyIndex() const {return adj_index;}
         virtual void populateNode(bool labelled, int seed);
@@ -33,7 +32,7 @@ class Node {
         // Traversal Specific
         enum COLOR {WHITE, GRAY, BLACK};
         COLOR getColor() const {return color;}
-        Node* getParent(Node* node) const {return parent;}
+        Node& getParent(Node& node) const {return parent;}
 
         // BFS specific
         int getDist2Source() const {return dist2s;}
@@ -42,10 +41,7 @@ class Node {
         int getEntryTime() const { return entry_index;}
         int getExitTime() const { return exit_index;}
 
-        static int getNewId() {return count++;}
-        int assignId() { id = getNewId();}
-
-
+        bool operator ==(const Node& node2);
         friend ostream& operator <<(ostream& os, const Node& node);
         template<class V, class E> friend class Graph;
 
@@ -53,7 +49,6 @@ class Node {
         string label;   // labels are unique
         T& value;      // need not be unique
         Edge<T>* edge_list;     // linked list of edges.
-        bool operator ==(Node* node2);
         int adj_index;
         int id;
         static int count;
@@ -80,10 +75,11 @@ class Node {
         string createRandomLabels(int nVertices);
 
         void setColor(COLOR color) {this->color = color;}
-        void setParent(Node* node) {this->parent = node;}
-        void setSource(Node* node) {this->source = node;}
+        void setParent(Node& node) {this->parent = &node;}
+        void setSource(Node& node) {this->source = &node;}
         void setDist2Source(int dist) {this->dist2s = dist;}
         void setEntryTime(int entry_idx) { entry_index = entry_idx;}
+        Edge<T>* setEdgeList(Edge<T>& edge) {edge_list = &edge;}
         void setExitTime(int exit_idx) { exit_index = exit_idx;}
 };
 
@@ -167,12 +163,13 @@ Node<T>::Node(const Node<T>& node):
 
 // nodes are equal if either they are same or have same label.
 template<typename T>
-bool Node<T>::operator==(Node<T>* node2) {
-    if (this == node2)  // if pointer matches, return true
+bool Node<T>::operator==(const Node<T>& node2) {
+    if (this == &node2)  // if pointer matches, return true
         return true;
-    if (this->label.length() > 0 && node2->label.length() > 0)  // if label is defined match that.
-        return this->label == node2->label;
-    return false;
+    return (getValue() == node2.getValue() &&
+            (getLabel() == DEFAULT_LABEL ||
+             getLabel() == node2.getLabel()));
+
 };
 
 template<typename T>
@@ -205,11 +202,10 @@ void Node<T>::populateNode(bool labelled, int seed) {
 template<typename T>
 Node<T>::~Node() {
     Edge<T>* edge = getEdgeList();
-    Edge<T>* tmp;
     while(edge != NULL) {
-        tmp = edge->getNext();
+        Edge<T>& tmp = edge->getNext();
         delete edge;
-        edge = tmp;
+        edge = &tmp;
     }
 }
 
