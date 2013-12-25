@@ -1,62 +1,57 @@
 #include    <iostream>
 #include<time.h>
 #include<stdlib.h>
+#include "edge.hpp"     //forward declaration will not work, because in decructor we call method of edge.
 #ifndef __NODE__
 #define __NODE__
 using namespace std;
 
-template<typename T>class Edge;
+template<class V, class E> class Graph;
 
 template<typename T>
 class Node {
 
     public:
-        Node* getSource() {return source;}
-        Node();
-        Node(T value);
-        Node(string label);
-        Node(T value, string label);
-        Node(Node* node);
-        int getId() {return id;}
-        T getValue() {return *value_ptr;}
-        void setValue(T val) {value_ptr = &val;}
-        Edge<T>* getEdgeList() {return edge_list;}
+        static string DEFAULT_LABEL;
+
+        Node(T& value);
+        Node(T& value, string label);
+        Node(const Node& node);
+
+        Node* getSource() const {return source;}
+        int getId() const {return id;}
+        T& getValue() const {return value;}
+        Edge<T>* getEdgeList() const {return edge_list;}
         Edge<T>* setEdgeList(Edge<T>* edge) {edge_list = edge;}
-        string getLabel() {return label;}
-        void setLabel(string lbl) {label = lbl;}
-        void setAdjecencyIndex(int index) {adj_index = index;}
-        int  getAdjecencyIndex() {return adj_index;}
-        virtual void populateNode(bool labelled, bool valued, int seed);
+        string getLabel() const {return label;}
+        int  getAdjecencyIndex() const {return adj_index;}
+        virtual void populateNode(bool labelled, int seed);
         virtual void printNode();
         virtual void reset();
         ~Node();
-        friend ostream& operator <<(ostream& os, const Node& node);
-        static int getNewId() {return count++;}
-        int assignId() { id = getNewId();}
 
         // Traversal Specific
         enum COLOR {WHITE, GRAY, BLACK};
-        COLOR getColor() {return color;}
-        Node* getParent(Node* node) {return parent;}
-
-        void setColor(COLOR color) {this->color = color;}
-        void setParent(Node* node) {this->parent = node;}
-        void setSource(Node* node) {this->source = node;}
+        COLOR getColor() const {return color;}
+        Node* getParent(Node* node) const {return parent;}
 
         // BFS specific
-        int getDist2Source(){return dist2s;}
-        void setDist2Source(int dist) {this->dist2s = dist;}
+        int getDist2Source() const {return dist2s;}
 
         // DFS Specific
-        int getEntryTime() { return entry_index;}
-        void setEntryTime(int entry_idx) { entry_index = entry_idx;}
+        int getEntryTime() const { return entry_index;}
+        int getExitTime() const { return exit_index;}
 
-        int getExitTime() { return exit_index;}
-        void setExitTime(int exit_idx) { exit_index = exit_idx;}
+        static int getNewId() {return count++;}
+        int assignId() { id = getNewId();}
+
+
+        friend ostream& operator <<(ostream& os, const Node& node);
+        template<class V, class E> friend class Graph;
 
     private:
         string label;   // labels are unique
-        T* value_ptr;      // need not be unique
+        T& value;      // need not be unique
         Edge<T>* edge_list;     // linked list of edges.
         bool operator ==(Node* node2);
         int adj_index;
@@ -75,33 +70,52 @@ class Node {
         int entry_index;    // Global Count of nodes processed, when encountered
         int exit_index;     // Global count of nodes when blackened.
 
+        // Spanning Tree Related
+        bool inTree;
+
+        void setValue(T& val) {value = val;}
+        void setLabel(string lbl) {label = lbl;}
+        void setAdjecencyIndex(int index) {adj_index = index;}
+
         string createRandomLabels(int nVertices);
+
+        void setColor(COLOR color) {this->color = color;}
+        void setParent(Node* node) {this->parent = node;}
+        void setSource(Node* node) {this->source = node;}
+        void setDist2Source(int dist) {this->dist2s = dist;}
+        void setEntryTime(int entry_idx) { entry_index = entry_idx;}
+        void setExitTime(int exit_idx) { exit_index = exit_idx;}
 };
+
 
 template<typename T>
 int Node<T>::count = 0;
 
 template<typename T>
-Node<T>::Node(T val, string lbl) {
-    value_ptr = &val;
-    label = lbl;
-    edge_list = NULL;
-    adj_index = -1;
+string Node<T>::DEFAULT_LABEL = "";
+
+template<typename T>
+Node<T>::Node(T& val, string lbl):
+    value(val),
+    label(lbl),
+    edge_list(NULL),
+    adj_index(-1),
+    id(count++),
 
     // Traversal Specific
-    color = WHITE;
-    parent = NULL;
-    source = NULL;
+    color(WHITE),
+    parent(NULL),
+    source(NULL),
 
     // BFS specific
-    dist2s = -1;
+    dist2s(-1),
 
     // DFS specific
-    entry_index = -1;
-    exit_index = -1;
+    entry_index(-1),
+    exit_index(-1),
 
-    id = -1;
-}
+    // Spanning Tree Related
+    inTree(false) {}
 
 template<typename T>
 void Node<T>::reset() {
@@ -115,30 +129,41 @@ void Node<T>::reset() {
     // DFS specific
     entry_index = -1;
     exit_index = -1;
+
+    // Spanning Tree Related
+    bool inTree = false;
 }
 
 template<typename T>
-Node<T>::Node(T val) {
-    Node(val, "");
-}
+Node<T>::Node(T& val):
+    value(val),
+    label(DEFAULT_LABEL),
+    edge_list(NULL),
+    adj_index(-1),
+    id(count++),
+
+    // Traversal Specific
+    color(WHITE),
+    parent(NULL),
+    source(NULL),
+
+    // BFS specific
+    dist2s(-1),
+
+    // DFS specific
+    entry_index(-1),
+    exit_index(-1),
+
+    // Spanning Tree Related
+    inTree(false) {}
+
 
 template<typename T>
-Node<T>::Node(string lbl) {
-    Node(NULL, lbl);
-}
-
-template<typename T>
-Node<T>::Node() {
-    Node(NULL, "");
-}
-
-template<typename T>
-Node<T>::Node(Node<T>* node) {
-    value_ptr = &node->getValue();
-    label = node->getLabel();
-    edge_list = NULL;
-    adj_index = node->getAdjecencyIndex();
-}
+Node<T>::Node(const Node<T>& node):
+    value(node.getValue()),
+    label(node.getLabel()),
+    edge_list(NULL),
+    adj_index(node.getAdjecencyIndex()) {}
 
 // nodes are equal if either they are same or have same label.
 template<typename T>
@@ -172,12 +197,9 @@ string Node<T>::createRandomLabels(int nVertices) {
 }
 
 template<typename T>
-void Node<T>::populateNode(bool labelled, bool valued, int seed) {
+void Node<T>::populateNode(bool labelled, int seed) {
     if (labelled)
         this->setLabel(createRandomLabels(seed));
-
-    if (valued)
-        this->setValue(rand() % seed + 1);
 }
 
 template<typename T>

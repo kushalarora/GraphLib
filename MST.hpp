@@ -4,45 +4,6 @@ using namespace std;
 #include "graph/graph.hpp"
 #include "../DataStructures/FibonacciHeap.hpp"
 #include<limits.h>
-class NodeMST : public Node {
-    private:
-        bool in_tree;
-        int distance;
-        NodeMST* parent;
-
-    public:
-        NodeMST(){
-            in_tree = false;
-            distance = INT_MAX;
-            parent = NULL;
-        }
-        NodeMST(int value) : Node(value) {
-            in_tree = false;
-            distance = INT_MAX;
-            parent = NULL;
-        }
-        NodeMST(string label): Node(label) {
-            in_tree = false;
-            distance = INT_MAX;
-            parent = NULL;
-        }
-        NodeMST(int value, string label) : Node(value, label) {
-            in_tree = false;
-            distance = INT_MAX;
-            parent = NULL;
-        }
-        void addToTree() {in_tree = true;}
-        bool isInTree() {return in_tree;}
-        void setDistance(int distance) {this->distance = distance;}
-        int getDistance() {return distance;}
-        void setParent(NodeMST* parent) {this->parent = parent;}
-        NodeMST* getParent() {return parent;}
-        void reset() {
-            in_tree = false;
-            distance = INT_MAX;
-            parent = NULL;
-        }
-};
 class MinQueueWrapper {
     public:
         virtual void init(Graph<NodeMST>* G) = 0;
@@ -118,5 +79,3 @@ class MinimumSpanningTree {
 
         void printMSTEdges(Graph<NodeMST>* G);
 };
-
-
