@@ -40,10 +40,9 @@
  *              iv.  Pointer to next edge node.
  *
  *          Apart from this the main structure contains some journaling info like
- *              i.   Array of degree of each node.
- *              ii.  No. of vertices.
- *              iii. No. of edges
- *              iv.  boolean directed.
+ *              i.  No. of vertices.
+ *              ii. No. of edges
+ *              iii.  boolean directed.
  */
 
 #include<iostream>
@@ -53,6 +52,7 @@
 #include<assert.h>
 #include<queue>
 #include<map>
+#include<vector>
 
 #include "edge.hpp"
 #include "node.hpp"
@@ -64,129 +64,120 @@ const int MAXV = 100000;
 template<class V, class E>
 class Graph {
     public:
+        enum RESET {HARD_RESET, SOFT_RESET};
         Graph();
         ~Graph();
-        Graph(bool directed, bool weighted, bool labelled, bool valued);
-        V* insertNode(V* node);
-        void createEdge(V* V1, V* V2);
-        void createEdge(V* V1, V* V2, float weight);
-        inline bool isWeighted() {return weighted;}
-        inline bool isDirected() {return directed;}
-        inline bool isLabelled() {return labelled;}
-        inline bool isValued() {return valued;}
+        Graph(bool directed, bool weighted, bool labelled);
+        V& insertNode(V& node);
+        void createEdge(V& V1, V& V2);
+        void createEdge(V& V1, V& V2, float weight);
+        inline bool isWeighted() const {return weighted;}
+        inline bool isDirected() const {return directed;}
+        inline bool isLabelled() const {return labelled;}
         virtual void printGraph();
-        virtual void createRandomGraph(int nVertices);
-        virtual void createRandomGraph(int nVertices, float density);
-        virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic);
-        int getNVertices() {return nVertices;}
-        int getNEdge() {return nEdges;}
-        V* getNodeByIndex(int i);
+        virtual void createRandomGraph(int nVertices, V** nodes);
+        virtual void createRandomGraph(int nVertices, float density, V** nodes);
+        virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic, V** nodes);
+        int getNVertices() const {return edgeNode.size();}
+        int getNEdge() const {return nEdges;}
+        V& getNodeByIndex(int i);
         void reset();
+        void reset(RESET reset);
         bool isCyclic();
         void topsort();
 
         // Traversal Specific functions
-        void BreadthFirstSearch(V* source);
-        void DepthFirstRoutine(V* node);
+        void BreadthFirstSearch(V& source);
+        void DepthFirstRoutine(V& node);
         void DepthFirstSearch();
 
     private:
-        int nVertices;
         int nEdges;
         bool directed;
         bool weighted;
         bool labelled;
-        bool valued;
-        int degree[MAXV];
-        V* edgeNode[MAXV];
-        MinimumSpanningTree* mst;
+        vector<V*> edgeNode;
         void sort(int start, int end);
     protected:
         virtual void createRandomEdges(int nEdges, int nVertices, bool ensure_acyclic);
         virtual void processEdge(E* edge) {
 #ifdef DEBUG
             cout << "Processed Edge";
-            (edge->getCurrentNode())->printNode();
+            (edge->getCurrentNode()).printNode();
             edge->printEdge();
-            (edge->getOtherNode())->printNode();
+            (edge->getOtherNode()).printNode();
             cout << "\n";
             cout << "Edge turned " << edge->getType() << endl;
 #endif
         }
-        virtual void processOnBlack(V* node) {
+        virtual void processOnBlack(V& node) {
 #ifdef DEBUG
             cout << "Node Turned Black ";
-            node->printNode();
+            node.printNode();
             cout << "\n";
 #endif
         };
-        virtual void processOnGrey(V* node) {
+        virtual void processOnGrey(V& node) {
 #ifdef DEBUG
             cout << "Node turned Grey ";
-            node->printNode();
+            node.printNode();
             cout << "\n";
 #endif
         }
 };
 
 template<class V, class E>
-Graph<V,E>::Graph(bool dirctd, bool wghtd, bool lbled, bool valed) {
-    nVertices = 0;
-    nEdges = 0;
-    for (int i = 0; i < MAXV; i++) {
-        degree[i] = 0;
-        edgeNode[i] = NULL;
-    }
-    directed = dirctd;
-    weighted = wghtd;
-    labelled = lbled;
-    valued = valed;
-}
+Graph<V,E>::Graph(bool dirctd, bool wghtd, bool lbled) :
+    nEdges(0),
+    directed(dirctd),
+    weighted(wghtd),
+    labelled(lbled) {}
+
 template<class V, class E>
-Graph<V,E>::Graph() {
-    Graph(false, false, false, false);
-}
+Graph<V,E>::Graph() :
+    nEdges(0),
+    directed(false),
+    weighted(false),
+    labelled(false) {}
 
 
 template<class V, class E>
-V* Graph<V,E>::insertNode(V* node) {
-    int i;
-    int id = node->assignId();
-    for (i = 0; i < nVertices; i++) {
-        if (edgeNode[i] == node)
+V& Graph<V,E>::insertNode(V& node) {
+    typename vector<V*>::iterator it;
+    for (it = edgeNode.begin();
+            it != edgeNode.end(); it++) {
+        if (**it == node)
             // node already present
             return node;
     }
-    edgeNode[i] = node;
-    nVertices += 1;
-    degree[i] = 0;
-    node->setAdjecencyIndex(i);
+    node.setAdjecencyIndex(getNVertices());
+    edgeNode.push_back(&node);
     return node;
 }
 
 
 template<class V, class E>
-void Graph<V,E>::createEdge(V* V1, V* V2, float weight) {
-    V* nodeArr[2] = {V1, V2};
+void Graph<V,E>::createEdge(V& V1, V& V2, float weight) {
+    V* nodeArr[2] = {&V1, &V2};
     E* newEdge;
     E* temp;
     int i = 0, idx = 0;
     // ensure that both nodes were inserted into graph.
-    assert(V1->getAdjecencyIndex() != -1);
-    assert(V2->getAdjecencyIndex() != -1);
+    assert(V1.getAdjecencyIndex() != -1);
+    assert(V2.getAdjecencyIndex() != -1);
 
     int id = E::getNewId();
-    for (i = 0; i < (isDirected() ? 1: 2); i++, degree[idx]++, idx = 1 - idx) {
+    for (i = 0; i < (isDirected() ? 1: 2); i++, idx = 1 - idx) {
         V* currNode = nodeArr[idx];
         V* othrNode = nodeArr[1 - idx];
-        newEdge = new E((V*)currNode, (V*)othrNode, isDirected(), weight);
+        newEdge = new E(*currNode, *othrNode, isDirected(), weight);
         newEdge->setId(id);
         // inserting edge to v2 in v1
         temp = currNode->getEdgeList();
         E* prevEdge = temp;
         while(temp != NULL) {
             // if V2 already present do nothing.
-            if (temp->getOtherNode() == nodeArr[1 - idx])
+            if (temp->getOtherNode() == *nodeArr[1 - idx])
                 return;
             prevEdge = temp;
             temp = temp->getNext();
@@ -195,25 +186,31 @@ void Graph<V,E>::createEdge(V* V1, V* V2, float weight) {
             prevEdge->setNext(newEdge);
         else
             currNode->setEdgeList(newEdge);
+
+        currNode->incOutDegree();
+        if (isDirected())
+            othrNode->incInDegree();
+        else
+            currNode->incInDegree();
     }
     nEdges++;
 }
 
 template<class V, class E>
-void Graph<V,E>::createEdge(V* V1, V* V2) {
+void Graph<V,E>::createEdge(V& V1, V& V2) {
     createEdge(V1, V2, 0);
 }
 
 template<class V, class E>
 void Graph<V,E>::printGraph() {
-    for (int i = 0; i < nVertices; i++) {
-        V* node = edgeNode[i];
-        node->printNode();
-        E* tmp = node->getEdgeList();
+    for (int i = 0; i < getNVertices(); i++) {
+        V& node = getNodeByIndex(i);
+        node.printNode();
+        E* tmp = node.getEdgeList();
         while (tmp != NULL) {
             assert(tmp->getCurrentNode() == node);
             tmp->printEdge();
-            (tmp->getOtherNode())->printNode();
+            (tmp->getOtherNode()).printNode();
             tmp = tmp->getNext();
         }
         cout<<"\n"<<"\n";
@@ -233,10 +230,10 @@ void Graph<V,E>::createRandomEdges(int nEdges, int nVertices, bool ensure_acycli
         while (idx1 == idx2)
             idx2 = rand() % nVertices;
 
-        V* node1 = edgeNode[idx1];
-        V* node2 = edgeNode[idx2];
+        V& node1 = getNodeByIndex(idx1);
+        V& node2 = getNodeByIndex(idx2);
 
-        if (node1->getId() < node2->getId() || !ensure_acyclic)
+        if (node1.getId() < node2.getId() || !ensure_acyclic)
             createEdge(node1, node2, (isWeighted() ? rand() % 100  + 1: 0.0));
         else
             createEdge(node2, node1, (isWeighted() ? rand() % 100  + 1: 0.0));
@@ -245,96 +242,111 @@ void Graph<V,E>::createRandomEdges(int nEdges, int nVertices, bool ensure_acycli
 }
 
 template<class V, class E>
-void Graph<V,E>::createRandomGraph(int nVertices, float density, bool strictly_acyclic) {
+void Graph<V,E>::createRandomGraph(int nVertices, float density, bool strictly_acyclic, V** nodes) {
     srand(time(NULL));
     if (nVertices < 1)
         return;
     for (int i = 0; i < nVertices; i++) {
-        V* node = new V();
-        node->populateNode(isLabelled(), isValued(), nVertices);
-        insertNode(node);
+        nodes[i]->populateNode(isLabelled(), nVertices);
+        insertNode(*nodes[i]);
     }
     createRandomEdges(nVertices * (density > 0.0 ? density * nVertices : (rand() % nVertices)), nVertices, strictly_acyclic);
 }
 
 template<class V, class E>
-void Graph<V,E>::createRandomGraph(int nVertices, float density) {
-    createRandomGraph(nVertices, density, false);
+void Graph<V,E>::createRandomGraph(int nVertices, float density, V** nodes) {
+    createRandomGraph(nVertices, density, false, nodes);
 }
 
 template<class V, class E>
-void Graph<V,E>::createRandomGraph(int nVertices) {
-    createRandomGraph(nVertices, 0.0, false);
+void Graph<V,E>::createRandomGraph(int nVertices, V** nodes) {
+    createRandomGraph(nVertices, 0.0, false, nodes);
 }
 
 template<class V, class E>
-V* Graph<V,E>::getNodeByIndex(int i) {
-    if (i < 0 || i >= nVertices)
-        return NULL;
-    return edgeNode[i];
+V& Graph<V,E>::getNodeByIndex(int i) {
+    if (i < 0 || i >= getNVertices()) {
+        cerr << "Node index out of bound" << endl;
+        exit(-1);
+    }
+    return *edgeNode.at(i);
 }
 
 template<class V, class E>
 void Graph<V,E>::reset() {
-    for (int i = 0; i < nVertices; i++) {
-        edgeNode[i]->reset();
-    }
+}
+
+template<class V, class E>
+void Graph<V,E>::reset(RESET reset) {
+    typename vector<V*>::iterator it;
+    for (it = edgeNode.begin();
+            it != edgeNode.end(); it++)
+        (*it)->reset();
 }
 
 template<class V, class E>
 Graph<V,E>::~Graph() {
-    for (int i = 0; i < nVertices; i++) {
-        delete edgeNode[i];
+    typename vector<V*>::iterator it;
+    for (it = edgeNode.begin();
+            it != edgeNode.end(); it++) {
+        E* edge_list = (*it)->getEdgeList();
+        E* edge = edge_list;
+        E* tmp;
+        while (edge != NULL) {
+            tmp = edge->getNext();
+            delete edge;
+            edge = tmp;
+        }
     }
 }
 
 template<class V, class E>
-void Graph<V,E>::BreadthFirstSearch(V* source) {
+void Graph<V,E>::BreadthFirstSearch(V& source) {
     queue<V*> q;
     source->setColor(V::GRAY);
     E* edge;
     V* node;
     V* other;
     typename V::COLOR clr;
-    q.push(source);
+    q.push(&source);
     while(!q.empty()) {
         node = q.front();
-        processOnGrey(node);
+        processOnGrey(*node);
         assert(node != NULL);
         edge = node->getEdgeList();
         while(edge != NULL) {
-            assert(edge->getCurrentNode() == node);
-            other = (V*)edge->getOtherNode();
+            assert(edge->getCurrentNode() == *node);
+            other = (V*)&(edge->getOtherNode());
             clr = other->getColor();
             if (clr == V::WHITE) {
                 other->setColor(V::GRAY);
                 other->setDist2Source(other->getDist2Source() + 1);
-                other->setParent(node);
+                other->setParent(*node);
                 q.push(other);
             }
             edge = edge->getNext();
         }
         q.pop();
         node->setColor(V::BLACK);
-        processOnBlack(node);
+        processOnBlack(*node);
     }
 }
 
 template<class V, class E>
-void Graph<V,E>::DepthFirstRoutine(V* node) {
+void Graph<V,E>::DepthFirstRoutine(V& node) {
     static int count = 0;
-    E* edge_list = node->getEdgeList();
+    E* edge_list = node.getEdgeList();
     E* edge = edge_list;
     V* other;
     static map<int, E*> edge_mp;
-    node->setEntryTime(count++);
-    node->setColor(V::GRAY);
+    node.setEntryTime(count++);
+    node.setColor(V::GRAY);
     processOnGrey(node);
     while(edge != NULL) {
         int edge_id = edge->getId();
         typename map<int, E*>::iterator it = edge_mp.find(edge_id);
 
-        other = (V*)edge->getOtherNode();
+        other = (V*)(&edge->getOtherNode());
         typename V::COLOR clr = other->getColor();
 
         if (it == edge_mp.end()) {
@@ -345,7 +357,7 @@ void Graph<V,E>::DepthFirstRoutine(V* node) {
             else if (clr == V::GRAY)
                 edge->setType(E::BACK_EDGE);
             else {
-                int node_entry_tm = node->getEntryTime();
+                int node_entry_tm = node.getEntryTime();
                 int other_entry_tm = other->getEntryTime();
 
                 if (node_entry_tm < other_entry_tm)
@@ -363,17 +375,16 @@ void Graph<V,E>::DepthFirstRoutine(V* node) {
         }
 
         processEdge(edge);
-        assert(other != NULL);
 
         if (clr == V::WHITE) {
             other->setParent(node);
-            DepthFirstRoutine(other);
+            DepthFirstRoutine(*other);
         }
         edge = edge->getNext();
     }
 
-    node->setExitTime(count);
-    node->setColor(V::BLACK);
+    node.setExitTime(count);
+    node.setColor(V::BLACK);
     processOnBlack(node);
 }
 
@@ -381,8 +392,8 @@ template<class V, class E>
 void Graph<V,E>::DepthFirstSearch() {
     static int count = 0;
     for (int i = 0; i < getNVertices(); i++) {
-        V* node = getNodeByIndex(i);
-        if (node->getColor() == V::WHITE)
+        V& node = getNodeByIndex(i);
+        if (node.getColor() == V::WHITE)
             DepthFirstRoutine(node);
     }
 }
@@ -391,10 +402,9 @@ template<class V, class E>
 bool Graph<V,E>::isCyclic() {
     DepthFirstSearch();
     for (int i = 0; i < getNVertices(); i++) {
-        V* node = getNodeByIndex(i);
-        assert(node != NULL);
+        V& node = getNodeByIndex(i);
 
-        E* edge_list = node->getEdgeList();
+        E* edge_list = node.getEdgeList();
         assert(edge_list != NULL);
 
         E* edge = edge_list;
@@ -411,17 +421,17 @@ template<class V, class E>
 void Graph<V, E>::sort(int start, int end) {
     if (start < end) {
         int pivot = start + rand() % (end - start);
-        swap<V*>(edgeNode[start], edgeNode[pivot]);
+        swap<V&>(getNodeByIndex(start), getNodeByIndex(pivot));
         int i = start + 1, j = end;
         while(i <= j) {
-            if (edgeNode[i]->getExitTime() < edgeNode[start]->getExitTime()) {
+            if (getNodeByIndex(i).getExitTime() < getNodeByIndex(start).getExitTime()) {
                 i++;
             } else {
-                swap<V*>(edgeNode[i], edgeNode[j]);
+                swap<V&>(getNodeByIndex(i), getNodeByIndex(j));
                 j--;
             }
         }
-        swap<V*>(edgeNode[start], edgeNode[i - 1]);
+        swap<V&>(getNodeByIndex(start), getNodeByIndex(i - 1));
         sort(start, i - 2);
         sort(i, end);
     }
@@ -434,7 +444,7 @@ void Graph<V,E>::topsort() {
 
 #ifdef DEBUG
     for (int i = 0; i < getNVertices(); i++)
-        edgeNode[i]->printNode();
+        getNodeByIndex(i).printNode();
     cout << endl;
 #endif
 
@@ -442,7 +452,7 @@ void Graph<V,E>::topsort() {
 
 #ifdef DEBUG
     for (int i = 0; i < getNVertices(); i++)
-        edgeNode[i]->printNode();
+        getNodeByIndex(i).printNode();
     cout << endl;
 #endif
 }

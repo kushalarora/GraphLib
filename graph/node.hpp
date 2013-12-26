@@ -23,11 +23,12 @@ class Node {
         T& getValue() const {return value;}
         Edge<T>* getEdgeList() const {return edge_list;}
         string getLabel() const {return label;}
-        int  getAdjecencyIndex() const {return adj_index;}
+        int getAdjecencyIndex() const {return adj_index;}
+        int getInDegree() const {return in_deg;}
+        int getOutDegree() const {return out_deg;}
         virtual void populateNode(bool labelled, int seed);
         virtual void printNode();
         virtual void reset();
-        ~Node();
 
         // Traversal Specific
         enum COLOR {WHITE, GRAY, BLACK};
@@ -46,12 +47,14 @@ class Node {
         template<class V, class E> friend class Graph;
 
     private:
+        static int count;
         string label;   // labels are unique
         T& value;      // need not be unique
         Edge<T>* edge_list;     // linked list of edges.
         int adj_index;
         int id;
-        static int count;
+        int out_deg;
+        int in_deg;
 
         // Traversal Specific Variabls
         COLOR color;
@@ -79,8 +82,11 @@ class Node {
         void setSource(Node& node) {this->source = &node;}
         void setDist2Source(int dist) {this->dist2s = dist;}
         void setEntryTime(int entry_idx) { entry_index = entry_idx;}
-        Edge<T>* setEdgeList(Edge<T>& edge) {edge_list = &edge;}
+        void setEdgeList(Edge<T>* edge) {edge_list = edge;}
+
         void setExitTime(int exit_idx) { exit_index = exit_idx;}
+        void incOutDegree() {out_deg++;}
+        void incInDegree() {in_deg++;}
 };
 
 
@@ -97,6 +103,8 @@ Node<T>::Node(T& val, string lbl):
     edge_list(NULL),
     adj_index(-1),
     id(count++),
+    in_deg(0),
+    out_deg(0),
 
     // Traversal Specific
     color(WHITE),
@@ -118,6 +126,8 @@ void Node<T>::reset() {
     color = WHITE;
     parent = NULL;
     source = NULL;
+    in_deg = 0;
+    out_deg = 0;
 
     // BFS specific
     dist2s = -1;
@@ -128,6 +138,13 @@ void Node<T>::reset() {
 
     // Spanning Tree Related
     bool inTree = false;
+
+    // reset edges
+    Edge<T>* tmp = getEdgeList();
+    while(tmp != NULL) {
+       tmp->reset();
+       tmp = tmp->getNext();
+    }
 }
 
 template<typename T>
@@ -137,6 +154,8 @@ Node<T>::Node(T& val):
     edge_list(NULL),
     adj_index(-1),
     id(count++),
+    in_deg(0),
+    out_deg(0),
 
     // Traversal Specific
     color(WHITE),
@@ -158,6 +177,8 @@ template<typename T>
 Node<T>::Node(const Node<T>& node):
     value(node.getValue()),
     label(node.getLabel()),
+    out_deg(0),
+    in_deg(0),
     edge_list(NULL),
     adj_index(node.getAdjecencyIndex()) {}
 
@@ -197,16 +218,6 @@ template<typename T>
 void Node<T>::populateNode(bool labelled, int seed) {
     if (labelled)
         this->setLabel(createRandomLabels(seed));
-}
-
-template<typename T>
-Node<T>::~Node() {
-    Edge<T>* edge = getEdgeList();
-    while(edge != NULL) {
-        Edge<T>& tmp = edge->getNext();
-        delete edge;
-        edge = &tmp;
-    }
 }
 
 template<typename T>

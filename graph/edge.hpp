@@ -17,7 +17,7 @@ class Edge {
         Edge(Node<T>& n1, Node<T>& n2, bool is_directed, float weight);
         Edge(Node<T>& n1, Node<T>& n2, bool is_directed);
         Edge(Node<T>& n1, Node<T>& n2, float weight);
-        Edge<T>& getNext() const {return *next;}
+        Edge<T>* getNext() const {return next;}
         Node<T>& getCurrentNode() const {return node1;}
         Node<T>& getOtherNode() const { return node2;}
         bool isDirected() const {return is_directed;}
@@ -26,6 +26,7 @@ class Edge {
         int getId() const { return id;}
         bool operator ==(const Edge<T>& edge2);
         void printEdge();
+        void reset();
 
     private:
         Node<T>& node1;
@@ -37,7 +38,7 @@ class Edge {
         EDGE_TYPE type;
         int id;
 
-        void setNext(const Edge<T>& next) {this->next = &next;}
+        void setNext(Edge<T>* next) {this->next = next;}
         void setType(EDGE_TYPE edge_type) { this->type = edge_type;}
         void setId(int Id) { id = Id;}
 
@@ -46,6 +47,11 @@ class Edge {
 
 template<typename T>
 int Edge<T>::count = 0;
+
+template<typename T>
+void Edge<T>::reset() {
+    type = NA;
+}
 
 template<typename T>
 Edge<T>::Edge(Node<T>& n1, Node<T>& n2, bool is_directed, float weight) :
