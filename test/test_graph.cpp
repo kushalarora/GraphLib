@@ -106,6 +106,11 @@ class TestGraph {
         }
         void testDFS() {
         }
+        void testTranspose() {
+            g = Graph< Node<int>, Edge<int> >();
+            Graph< Node<int>, Edge<int> > g1 = Graph< Node<int>, Edge<int> >();
+            ASSERT(g == g1, "Empty graphs should be equal");
+        }
 };
 
 int main() {
@@ -115,4 +120,5 @@ int main() {
     test.testInsertNode();
     test.testCreateUndirectedEdge();
     test.testCreateDirectedEdge();
+    test.testTranspose();
 }

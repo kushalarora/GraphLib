@@ -90,6 +90,7 @@ class Graph {
         void BreadthFirstSearch(V& source);
         void DepthFirstRoutine(V& node);
         void DepthFirstSearch();
+        bool operator ==(Graph& graph);
 
     private:
         int nEdges;
@@ -456,4 +457,30 @@ void Graph<V,E>::topsort() {
     cout << endl;
 #endif
 }
+
+template<class V, class E>
+bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
+    if (getNVertices() != graph.getNVertices())
+        return false;
+
+    for(int i = 0; i < getNVertices(); i++) {
+        if (getNodeByIndex(i) != graph.getNodeByIndex(i))
+            return false;
+
+        E* tmp1 = getNodeByIndex(i).getEdgeList();
+        E* tmp2 = graph.getNodeByIndex(i).getEdgeList();
+
+        while(tmp2 != NULL && tmp2 != NULL) {
+            if (tmp1 != tmp2)
+                return false;
+            tmp1 = tmp1->getNext();
+            tmp2 = tmp2->getNext();
+        }
+
+        if (tmp1 != NULL || tmp2 != NULL)
+            return false;
+    }
+    return true;
+}
+
 #endif

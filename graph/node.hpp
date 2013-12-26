@@ -44,6 +44,7 @@ class Node {
         int getExitTime() const { return exit_index;}
 
         bool operator ==(const Node& node2);
+        bool operator !=(const Node& node2);
         Node& operator =(const Node& node2);
         friend ostream& operator <<(ostream& os, const Node& node);
         template<class V, class E> friend class Graph;
@@ -178,21 +179,26 @@ template<typename T>
 Node<T>::Node(const Node<T>& node):
     value(node.getValue()),
     label(node.getLabel()),
-    out_deg(0),
-    in_deg(0),
-    edge_list(NULL),
-    adj_index(node.getAdjecencyIndex()) {}
+    edge_list(node.getEdgeList()),
+    adj_index(node.getAdjecencyIndex()),
+    id(node.getId()),
+    out_deg(node.getOutDegree()),
+    in_deg(node.getInDegree()) {}
 
 // nodes are equal if either they are same or have same label.
 template<typename T>
 bool Node<T>::operator==(const Node<T>& node2) {
-    if (this == &node2)  // if pointer matches, return true
-        return true;
-    return (getValue() == node2.getValue() &&
+    return (this == &node2 ||  // if pointer matches, return true
+            id == node2.getId() ||
+         (getValue() == node2.getValue() &&
             (getLabel() == DEFAULT_LABEL ||
-             getLabel() == node2.getLabel()));
+             getLabel() == node2.getLabel())));
+}
 
-};
+template<typename T>
+bool Node<T>::operator!=(const Node<T>& node2) {
+    return !(*this == node2);
+}
 
 template<typename T>
 Node<T>& Node<T>::operator =(const Node<T>& node) {

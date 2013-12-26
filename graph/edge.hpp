@@ -25,6 +25,7 @@ class Edge {
         EDGE_TYPE getType() const { return type;}
         int getId() const { return id;}
         bool operator ==(const Edge<T>& edge2);
+        bool operator !=(const Edge<T>& edge2);
         void printEdge();
         void reset();
 
@@ -95,14 +96,16 @@ Edge<T>::Edge(Node<T>& n1, Node<T>& n2, float weight) :
 
 template<typename T>
 bool Edge<T>::operator ==(const Edge& edge2) {
-    if (edge2 == NULL)
-        return false;
-
-    if (this->getCurrentNode() == edge2.getCurrentNode() &&
+    return (edge2 == NULL || 
+            id == edge2.getId() ||
+        (this->getCurrentNode() == edge2.getCurrentNode() &&
             this->getOtherNode() == edge2.getOtherNode() &&
-                (this->getWeight() == edge2.getWeight()))
-            return true;
-    return false;
+                (this->getWeight() == edge2.getWeight())));
+}
+
+template<typename T>
+bool Edge<T>::operator !=(const Edge& edge2) {
+    return !(*this == edge2);
 }
 
 template<typename T>
