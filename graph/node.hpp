@@ -18,7 +18,7 @@ class Node {
         Node(T& value, string label);
         Node(const Node& node);
 
-        Node& getSource() const {return source;}
+        Node* getSource() const {return source;}
         int getId() const {return id;}
         T& getValue() const {return value;}
         Edge<T>* getEdgeList() const {return edge_list;}
@@ -26,6 +26,7 @@ class Node {
         int getAdjecencyIndex() const {return adj_index;}
         int getInDegree() const {return in_deg;}
         int getOutDegree() const {return out_deg;}
+        bool isInTree() const {return in_tree;}
         virtual void populateNode(bool labelled, int seed);
         virtual void printNode();
         virtual void reset();
@@ -33,7 +34,7 @@ class Node {
         // Traversal Specific
         enum COLOR {WHITE, GRAY, BLACK};
         COLOR getColor() const {return color;}
-        Node& getParent(Node& node) const {return parent;}
+        Node* getParent() const {return parent;}
 
         // BFS specific
         int getDist2Source() const {return dist2s;}
@@ -43,6 +44,7 @@ class Node {
         int getExitTime() const { return exit_index;}
 
         bool operator ==(const Node& node2);
+        Node& operator =(const Node& node2);
         friend ostream& operator <<(ostream& os, const Node& node);
         template<class V, class E> friend class Graph;
 
@@ -69,7 +71,7 @@ class Node {
         int exit_index;     // Global count of nodes when blackened.
 
         // Spanning Tree Related
-        bool inTree;
+        bool in_tree;
 
         void setValue(T& val) {value = val;}
         void setLabel(string lbl) {label = lbl;}
@@ -119,7 +121,7 @@ Node<T>::Node(T& val, string lbl):
     exit_index(-1),
 
     // Spanning Tree Related
-    inTree(false) {}
+    in_tree(false) {}
 
 template<typename T>
 void Node<T>::reset() {
@@ -137,7 +139,7 @@ void Node<T>::reset() {
     exit_index = -1;
 
     // Spanning Tree Related
-    bool inTree = false;
+    bool in_tree = false;
 
     // reset edges
     Edge<T>* tmp = getEdgeList();
@@ -170,8 +172,7 @@ Node<T>::Node(T& val):
     exit_index(-1),
 
     // Spanning Tree Related
-    inTree(false) {}
-
+    in_tree(false) {}
 
 template<typename T>
 Node<T>::Node(const Node<T>& node):
@@ -193,6 +194,34 @@ bool Node<T>::operator==(const Node<T>& node2) {
 
 };
 
+template<typename T>
+Node<T>& Node<T>::operator =(const Node<T>& node) {
+
+    value = node.getValue();
+    label = node.getLabel();
+    edge_list = node.getEdgeList();
+    adj_index = node.getAdjecencyIndex();
+    id = node.getId();
+    in_deg = node.getInDegree();
+    out_deg = node.getOutDegree();
+
+    // Traversal Specific
+    color = node.getColor();
+    parent = node.getParent();
+    source = node.getSource();
+
+    // BFS specific
+    dist2s = node.getDist2Source();
+
+    // DFS specific
+    entry_index = node.getEntryTime();
+    exit_index = node.getExitTime();
+
+    // Spanning Tree Related
+    in_tree = node.isInTree();
+
+    return *this;
+}
 template<typename T>
 void Node<T>::printNode() {
     cout << "( " << getId() << " ";

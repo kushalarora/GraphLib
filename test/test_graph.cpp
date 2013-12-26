@@ -35,12 +35,14 @@ class TestGraph {
         int testInsertNode() {
             vector< Node<int> > nodeArr;
             for(int i = 0; i < 10; i++) {
-                nodeArr.push_back(Node<int>(i));
+                Node<int> node = Node<int>(i);
+                node.populateNode(true, 10);
+                nodeArr.push_back(node);
             }
 
             g = Graph < Node<int>, Edge<int> >();
             for (int i = 0; i < nodeArr.size(); i++) {
-                g.insertNode(nodeArr[i]);
+                g.insertNode(nodeArr.at(i));
             }
 
             int size = nodeArr.size();
