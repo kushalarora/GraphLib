@@ -531,7 +531,6 @@ void Graph<V,E>::deleteEdge(E* edge) {
 template<class V, class E>
 void Graph<V,E>::transpose() {
     if (isDirected()) {
-        printGraph();
         typename vector < V* >::iterator it;
         int largest_edge_id = -1;
         for (it = edgeNode.begin(); it != edgeNode.end(); it++) {
@@ -561,7 +560,6 @@ void Graph<V,E>::transpose() {
                 }
             }
         }
-        printGraph();
     }
 }
 #endif
