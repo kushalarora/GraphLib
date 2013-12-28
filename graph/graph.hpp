@@ -85,6 +85,7 @@ class Graph {
         void reset(RESET reset);
         bool isCyclic();
         void topsort();
+        void transpose();
 
         // Traversal Specific functions
         void BreadthFirstSearch(V& source);
@@ -101,6 +102,9 @@ class Graph {
         void sort(int start, int end);
     protected:
         virtual void createRandomEdges(int nEdges, int nVertices, bool ensure_acyclic);
+        virtual void deleteEdge(E* edge);
+
+        void hardResetGraph();
         virtual void processEdge(E* edge) {
 #ifdef DEBUG
             cout << "Processed Edge";
@@ -279,14 +283,23 @@ void Graph<V,E>::reset() {
 
 template<class V, class E>
 void Graph<V,E>::reset(RESET reset) {
-    typename vector<V*>::iterator it;
-    for (it = edgeNode.begin();
-            it != edgeNode.end(); it++)
-        (*it)->reset();
-}
+    if( reset == HARD_RESET) {
+       hardResetGraph();
+    } else {
+        typename vector<V*>::iterator it;
+        for (it = edgeNode.begin();
+                it != edgeNode.end(); it++)
+            (*it)->reset();
+        }
+    }
 
 template<class V, class E>
 Graph<V,E>::~Graph() {
+    hardResetGraph();
+}
+
+template<class V, class E>
+void Graph<V,E>::hardResetGraph() {
     typename vector<V*>::iterator it;
     for (it = edgeNode.begin();
             it != edgeNode.end(); it++) {
@@ -298,7 +311,13 @@ Graph<V,E>::~Graph() {
             delete edge;
             edge = tmp;
         }
+        (*it)->setEdgeList(NULL);
+        (*it)->reset();
+
     }
+    nEdges = 0;
+    edgeNode.clear();
+
 }
 
 template<class V, class E>
@@ -483,4 +502,66 @@ bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
     return true;
 }
 
+template<class V, class E>
+void Graph<V,E>::deleteEdge(E* edge) {
+    V& currNode = edge->getCurrentNode();
+    V& otherNode = edge->getOtherNode();
+    E* edge_list = currNode.getEdgeList();
+    if (edge == edge_list) {
+        currNode.setEdgeList(edge->getNext());
+    } else if (edge->getNext() != NULL) {
+        E* tmp = edge->getNext();
+        edge->setNext(tmp->getNext());
+        delete tmp;
+    } else {
+        E* tmp = edge_list;
+        while(tmp->getNext() != edge) {
+            tmp = tmp->getNext();
+        }
+        tmp->setNext(NULL);
+    }
+
+    currNode.decOutDegree();
+    if (isDirected())
+        otherNode.decInDegree();
+    else
+        currNode.decInDegree();
+}
+
+template<class V, class E>
+void Graph<V,E>::transpose() {
+    if (isDirected()) {
+        printGraph();
+        typename vector < V* >::iterator it;
+        int largest_edge_id = -1;
+        for (it = edgeNode.begin(); it != edgeNode.end(); it++) {
+            E* tmp = (*it)->getEdgeList();
+
+            while(tmp != NULL) {
+                if (tmp->getId() > largest_edge_id) {
+                    largest_edge_id = tmp->getId();
+                }
+                tmp = tmp->getNext();
+            }
+        }
+        for (it = edgeNode.begin(); it != edgeNode.end(); it++) {
+            E* tmp = (*it)->getEdgeList();
+
+            while(tmp != NULL) {
+                V& node1 = tmp->getCurrentNode();
+                V& node2 = tmp->getOtherNode();
+                float weight = tmp->getWeight();
+                if (tmp->getId() <= largest_edge_id) {
+                    E* tmp2 = tmp->getNext();
+                    deleteEdge(tmp);
+                    createEdge(node2, node1, weight);
+                    tmp = tmp2;
+                } else {
+                    tmp = tmp->getNext();
+                }
+            }
+        }
+        printGraph();
+    }
+}
 #endif

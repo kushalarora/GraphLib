@@ -25,6 +25,10 @@ class NodeTest {
             node3 = node2;
             ASSERT(node == node3, "Assignment Operator should give same object");
     }
+
+    void testReset() {
+
+    }
 };
 
 

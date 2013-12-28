@@ -90,6 +90,9 @@ class Node {
         void setExitTime(int exit_idx) { exit_index = exit_idx;}
         void incOutDegree() {out_deg++;}
         void incInDegree() {in_deg++;}
+        void decOutDegree() {out_deg--;}
+        void decInDegree() {in_deg--;}
+
 };
 
 
@@ -141,13 +144,6 @@ void Node<T>::reset() {
 
     // Spanning Tree Related
     bool in_tree = false;
-
-    // reset edges
-    Edge<T>* tmp = getEdgeList();
-    while(tmp != NULL) {
-       tmp->reset();
-       tmp = tmp->getNext();
-    }
 }
 
 template<typename T>
