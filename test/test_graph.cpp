@@ -10,8 +10,6 @@ class TestGraph {
     public:
         typedef Graph< Node<int>, Edge<int> > TGraph;
         typedef TGraph::RESET RESET;
-    private:
-        TGraph *g;
     public:
         int MAX_TRIES;
         TestGraph() {
@@ -20,16 +18,21 @@ class TestGraph {
         }
 
         void testEmpty() {
-            g = new Graph< Node<int>, Edge<int> >(true, true, true);
+            TGraph *g = new Graph< Node<int>, Edge<int> >(true, true, true);
+            TGraph g1(true, true, true);
             assert(g->isWeighted() == true);
             assert(g->isDirected() == true);
             assert(g->isLabelled() == true);
 
-            g = new Graph < Node<int>, Edge<int> >();
-            assert(g->isWeighted() == false);
-            assert(g->isDirected() == false);
-            assert(g->isLabelled() == false);
+            ASSERT(*g == g1, "Empty graphs should be equal");
 
+            TGraph* g2 = new Graph < Node<int>, Edge<int> >();
+            TGraph g3;
+            assert(g2->isWeighted() == false);
+            assert(g2->isDirected() == false);
+            assert(g2->isLabelled() == false);
+
+            ASSERT(*g2 == g3, "Empty graphs should be equal");
             cout << "testEmpty Done!"<<endl;
         }
 
@@ -41,7 +44,7 @@ class TestGraph {
                 nodeArr.push_back(node);
             }
 
-            g = new Graph < Node<int>, Edge<int> >();
+            TGraph *g = new Graph < Node<int>, Edge<int> >();
             for (int i = 0; i < nodeArr.size(); i++) {
                 g->insertNode(nodeArr.at(i));
             }
@@ -62,7 +65,7 @@ class TestGraph {
             Node<int> node1 = Node<int>(val);
             Node<int> node2 = Node<int>(val1);
 
-            g = new Graph < Node<int>, Edge<int> >();
+            TGraph* g = new Graph < Node<int>, Edge<int> >();
 
             g->insertNode(node1);
             g->insertNode(node2);
@@ -84,7 +87,7 @@ class TestGraph {
             int val = 10, val1 = 20;
             Node<int> node3 = Node<int>(val);
             Node<int> node4 = Node<int>(val1);
-            g = new Graph< Node<int>, Edge<int> >(true, false, false);
+            TGraph* g = new Graph< Node<int>, Edge<int> >(true, false, false);
             g->insertNode(node3);
             g->insertNode(node4);
             g->createEdge(node3, node4);
@@ -100,7 +103,7 @@ class TestGraph {
         }
 
         void testReset(RESET reset) {
-            g = new Graph< Node<int>, Edge<int> >();
+            TGraph* g = new Graph< Node<int>, Edge<int> >();
             Node<int>* nodeArr[5];
 
             for (int i = 0; i < 5; i++)
@@ -125,10 +128,8 @@ class TestGraph {
         void testDFS() {
         }
 
-        void testTranspose() {
-            g = new Graph< Node<int>, Edge<int> >();
-            Graph< Node<int>, Edge<int> > *g1 = new Graph< Node<int>, Edge<int> >(true, true, true);
-            ASSERT(*g == *g1, "Empty graphs should be equal");
+        void testTransposeUndirected() {
+            TGraph* g = new Graph< Node<int>, Edge<int> >(false, false, false);
 
             Node<int>* nodeArr[5];
 
@@ -138,22 +139,31 @@ class TestGraph {
             }
 
             g->createRandomGraph(5, 0.5, true, nodeArr);
-
             Graph< Node<int>, Edge<int> >  g2 = *g;
             g->transpose();
-            cout << "Hello World"<<endl;
             ASSERT(*g == g2, "Transpose should be same for undirected graph");
+            std::cout << "testTransposeUndirected Done!"<<endl;
+        }
 
-            g2.reset(TGraph::HARD_RESET);
-            g1->createRandomGraph(5, 0.8, true, nodeArr);
-            g2 = *g1;
+        void testTransposeDirected() {
+            TGraph* g = new Graph< Node<int>, Edge<int> >(true, true, true);
+            Node<int>* nodeArr[5];
 
-/*
-            g1->transpose();
+            for (int i = 0; i < 5; i++) {
+                nodeArr[i] = new Node<int>(i);
+                nodeArr[i]->populateNode(true, 10);
+            }
 
+            g->createRandomGraph(5, 0.5, true, nodeArr);
+            Graph< Node<int>, Edge<int> >  g2 = *g;
+
+            g->transpose();
+            g->transpose();
+
+//            g1->transpose();
+            ASSERT(*g == g2, "Transpose of transpose should be same");
             // Test tranpose
-*/
-            std::cout << "testTranspose Done!"<<endl;
+            std::cout << "testTransposeDirected Done!"<<endl;
         }
 };
 
@@ -163,6 +173,7 @@ int main() {
     test.testInsertNode();
     test.testCreateUndirectedEdge();
     test.testCreateDirectedEdge();
-    test.testTranspose();
+    test.testTransposeUndirected();
+    test.testTransposeDirected();
     return 0;
 }

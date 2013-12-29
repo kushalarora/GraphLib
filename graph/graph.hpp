@@ -237,13 +237,13 @@ void Graph<V,E>::createRandomEdges(int nEdges, int nVertices, bool ensure_acycli
         while (idx1 == idx2)
             idx2 = rand() % nVertices;
 
-        V& node1 = getNodeByIndex(idx1);
-        V& node2 = getNodeByIndex(idx2);
+        V* node1 = &getNodeByIndex(idx1);
+        V* node2 = &getNodeByIndex(idx2);
 
-        if (node1.getId() < node2.getId() || !ensure_acyclic)
-            createEdge(node1, node2, (isWeighted() ? rand() % 100  + 1: 0.0));
+        if (node1->getId() < node2->getId() || !ensure_acyclic)
+            createEdge(*node1, *node2, (isWeighted() ? rand() % 100  + 1: 0.0));
         else
-            createEdge(node2, node1, (isWeighted() ? rand() % 100  + 1: 0.0));
+            createEdge(*node2, *node1, (isWeighted() ? rand() % 100  + 1: 0.0));
         //printNode(edgeNode[idx1]);printEdge(edgeNode[idx2]);printNode(edgeNode[idx2]);
     }
 }
@@ -580,6 +580,7 @@ void Graph<V,E>::deleteEdge(E* edge) {
         otherNode.decInDegree();
     else
         currNode.decInDegree();
+    nEdges--;
 }
 
 template<class V, class E>
