@@ -98,10 +98,9 @@ Edge<T>::Edge(Node<T>& n1, Node<T>& n2, float weight) :
 
 template<typename T>
 bool Edge<T>::operator ==(const Edge& edge2) {
-    return (edge2 == NULL ||
-            id == edge2.getId() ||
-        (this->getCurrentNode() == edge2.getCurrentNode() &&
-            this->getOtherNode() == edge2.getOtherNode() &&
+    return (id == edge2.getId() ||
+        ((this->getCurrentNode() == edge2.getCurrentNode()) &&
+            (this->getOtherNode() == edge2.getOtherNode()) &&
                 (this->getWeight() == edge2.getWeight())));
 }
 

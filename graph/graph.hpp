@@ -66,6 +66,7 @@ class Graph {
     public:
         enum RESET {HARD_RESET, SOFT_RESET};
         Graph();
+        Graph(Graph& graph);
         ~Graph();
         Graph(bool directed, bool weighted, bool labelled);
         V& insertNode(V& node);
@@ -79,7 +80,7 @@ class Graph {
         virtual void createRandomGraph(int nVertices, float density, V** nodes);
         virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic, V** nodes);
         int getNVertices() const {return edgeNode.size();}
-        int getNEdge() const {return nEdges;}
+        int getNEdge() const {return (isDirected() ? nEdges : nEdges/2);}
         V& getNodeByIndex(int i);
         void reset();
         void reset(RESET reset);
@@ -198,8 +199,8 @@ void Graph<V,E>::createEdge(V& V1, V& V2, float weight) {
             othrNode->incInDegree();
         else
             currNode->incInDegree();
+        nEdges++;
     }
-    nEdges++;
 }
 
 template<class V, class E>
@@ -479,6 +480,8 @@ template<class V, class E>
 bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
     if (getNVertices() != graph.getNVertices())
         return false;
+    if (getNEdge() != graph.getNEdge())
+        return false;
 
     for(int i = 0; i < getNVertices(); i++) {
         if (getNodeByIndex(i) != graph.getNodeByIndex(i))
@@ -487,17 +490,44 @@ bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
         E* tmp1 = getNodeByIndex(i).getEdgeList();
         E* tmp2 = graph.getNodeByIndex(i).getEdgeList();
 
-        while(tmp2 != NULL && tmp2 != NULL) {
-            if (tmp1 != tmp2)
+        bool edge_found = false;
+        while(tmp2 != NULL) {
+            while(tmp1 != NULL) {
+                if (*tmp1 == *tmp2)
+                    edge_found = true;
+                tmp1 = tmp1->getNext();
+            }
+            if (!edge_found)
                 return false;
-            tmp1 = tmp1->getNext();
             tmp2 = tmp2->getNext();
         }
-
-        if (tmp1 != NULL || tmp2 != NULL)
-            return false;
     }
     return true;
+}
+
+template<class V, class E>
+Graph<V,E>::Graph(Graph<V,E>& graph) {
+    directed = graph.isDirected();
+    weighted = graph.isWeighted();
+    labelled = graph.isLabelled();
+    nEdges = 0;
+    map<int, V*> mp;
+    for (int i = 0; i < graph.getNVertices(); i++) {
+         V* node = new V(graph.getNodeByIndex(i));
+        insertNode(*node);
+        mp[node->getId()] = node;
+    }
+    assert(graph.getNVertices() == getNVertices());
+    for (int i = 0; i < getNVertices(); i++) {
+        V& node = graph.getNodeByIndex(i);
+        E* tmp = node.getEdgeList();
+        while(tmp != NULL) {
+            V& node1 = tmp->getCurrentNode();
+            V& node2 = tmp->getOtherNode();
+            createEdge(*mp[node1.getId()], *mp[node2.getId()], tmp->getWeight());
+            tmp = tmp->getNext();
+        }
+    }
 }
 
 template<class V, class E>
@@ -505,6 +535,7 @@ Graph<V,E>& Graph<V,E>::operator =(Graph<V,E>& graph) {
     directed = graph.isDirected();
     weighted = graph.isWeighted();
     labelled = graph.isLabelled();
+    nEdges = 0;
     map<int, V*> mp;
     for (int i = 0; i < graph.getNVertices(); i++) {
          V* node = new V(graph.getNodeByIndex(i));
