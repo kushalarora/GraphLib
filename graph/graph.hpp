@@ -92,6 +92,7 @@ class Graph {
         void DepthFirstRoutine(V& node);
         void DepthFirstSearch();
         bool operator ==(Graph& graph);
+        Graph& operator =(Graph& graph);
 
     private:
         int nEdges;
@@ -270,10 +271,7 @@ void Graph<V,E>::createRandomGraph(int nVertices, V** nodes) {
 
 template<class V, class E>
 V& Graph<V,E>::getNodeByIndex(int i) {
-    if (i < 0 || i >= getNVertices()) {
-        cerr << "Node index out of bound" << endl;
-        exit(-1);
-    }
+    assert(i >= 0 && i < getNVertices());
     return *edgeNode.at(i);
 }
 
@@ -500,6 +498,31 @@ bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
             return false;
     }
     return true;
+}
+
+template<class V, class E>
+Graph<V,E>& Graph<V,E>::operator =(Graph<V,E>& graph) {
+    directed = graph.isDirected();
+    weighted = graph.isWeighted();
+    labelled = graph.isLabelled();
+    map<int, V*> mp;
+    for (int i = 0; i < graph.getNVertices(); i++) {
+         V* node = new V(graph.getNodeByIndex(i));
+        insertNode(*node);
+        mp[node->getId()] = node;
+    }
+    assert(graph.getNVertices() == getNVertices());
+    for (int i = 0; i < getNVertices(); i++) {
+        V& node = graph.getNodeByIndex(i);
+        E* tmp = node.getEdgeList();
+        while(tmp != NULL) {
+            V& node1 = tmp->getCurrentNode();
+            V& node2 = tmp->getOtherNode();
+            createEdge(*mp[node1.getId()], *mp[node2.getId()], tmp->getWeight());
+            tmp = tmp->getNext();
+        }
+    }
+    return *this;
 }
 
 template<class V, class E>

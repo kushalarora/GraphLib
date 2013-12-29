@@ -175,11 +175,27 @@ template<typename T>
 Node<T>::Node(const Node<T>& node):
     value(node.getValue()),
     label(node.getLabel()),
-    edge_list(node.getEdgeList()),
-    adj_index(node.getAdjecencyIndex()),
     id(node.getId()),
-    out_deg(node.getOutDegree()),
-    in_deg(node.getInDegree()) {}
+    edge_list(NULL),
+    adj_index(-1),
+    in_deg(0),
+    out_deg(0),
+
+    // Traversal Specific
+    color(WHITE),
+    parent(NULL),
+    source(NULL),
+
+    // BFS specific
+    dist2s(-1),
+
+    // DFS specific
+    entry_index(-1),
+    exit_index(-1),
+
+    // Spanning Tree Related
+    in_tree(false) {}
+
 
 // nodes are equal if either they are same or have same label.
 template<typename T>
@@ -201,27 +217,7 @@ Node<T>& Node<T>::operator =(const Node<T>& node) {
 
     value = node.getValue();
     label = node.getLabel();
-    edge_list = node.getEdgeList();
-    adj_index = node.getAdjecencyIndex();
     id = node.getId();
-    in_deg = node.getInDegree();
-    out_deg = node.getOutDegree();
-
-    // Traversal Specific
-    color = node.getColor();
-    parent = node.getParent();
-    source = node.getSource();
-
-    // BFS specific
-    dist2s = node.getDist2Source();
-
-    // DFS specific
-    entry_index = node.getEntryTime();
-    exit_index = node.getExitTime();
-
-    // Spanning Tree Related
-    in_tree = node.isInTree();
-
     return *this;
 }
 template<typename T>

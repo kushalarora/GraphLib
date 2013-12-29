@@ -51,9 +51,7 @@ class TestGraph {
 
             ASSERT(g->getNVertices() == size, "Count of nodes wrong Size:" << size << ", NVertices:" << g->getNVertices());
             for (int i = 0; i < g->getNVertices(); i++) {
-                Node<int> node1 = g->getNodeByIndex(i);
-                ASSERT(node1.getAdjecencyIndex()  == i, "Adjecency index wrong, Adj Indec" << node1.getAdjecencyIndex() << " i:" << i);
-                i++;    // increase index;
+                ASSERT(g->getNodeByIndex(i)  == nodeArr[i], "Nodes should match Node");
             }
 
             cout << "testInsert Done!"<<endl;
@@ -141,19 +139,20 @@ class TestGraph {
 
             g->createRandomGraph(5, 0.5, true, nodeArr);
 
-            g->transpose();
-
             Graph< Node<int>, Edge<int> >  g2 = *g;
+            g->transpose();
+            cout << "Hello World"<<endl;
             ASSERT(*g == g2, "Transpose should be same for undirected graph");
 
-            g->reset(TGraph::HARD_RESET);
-
+            g2.reset(TGraph::HARD_RESET);
             g1->createRandomGraph(5, 0.8, true, nodeArr);
             g2 = *g1;
+
+/*
             g1->transpose();
 
             // Test tranpose
-
+*/
             std::cout << "testTranspose Done!"<<endl;
         }
 };

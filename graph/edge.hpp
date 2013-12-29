@@ -35,7 +35,6 @@ class Edge {
         bool is_directed;
         float weight;
         Edge<T>* next;
-        Edge<T>* previous;
         static int count;
         EDGE_TYPE type;
         int id;
@@ -99,7 +98,7 @@ Edge<T>::Edge(Node<T>& n1, Node<T>& n2, float weight) :
 
 template<typename T>
 bool Edge<T>::operator ==(const Edge& edge2) {
-    return (edge2 == NULL || 
+    return (edge2 == NULL ||
             id == edge2.getId() ||
         (this->getCurrentNode() == edge2.getCurrentNode() &&
             this->getOtherNode() == edge2.getOtherNode() &&
