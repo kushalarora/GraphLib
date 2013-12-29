@@ -73,7 +73,7 @@ class Node {
 
         // Spanning Tree Related
         bool in_tree;
-
+    protected:
         void setValue(T& val) {value = val;}
         void setLabel(string lbl) {label = lbl;}
         void setAdjecencyIndex(int index) {adj_index = index;}
@@ -86,6 +86,7 @@ class Node {
         void setDist2Source(int dist) {this->dist2s = dist;}
         void setEntryTime(int entry_idx) { entry_index = entry_idx;}
         void setEdgeList(Edge<T>* edge) {edge_list = edge;}
+        void setInTree(bool in_tree) {this->in_tree = in_tree;}
 
         void setExitTime(int exit_idx) { exit_index = exit_idx;}
         void incOutDegree() {out_deg++;}

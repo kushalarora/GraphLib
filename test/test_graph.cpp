@@ -6,6 +6,26 @@
 
 using namespace std;
 
+class TBFSNode : public Node<int> {
+    private:
+        bool in_tree;
+        void setInTree(bool in_tree) {this->in_tree = in_tree;}
+    public:
+        TBFSNode(int& val) : Node(val), in_tree(false){}
+        TBFSNode(int& val, string label) : Node(val, label), in_tree(false){}
+        TBFSNode(const TBFSNode& node) : Node(node), in_tree(false){}
+        friend class TBFSGraph;
+        bool inTree() {return in_tree;}
+};
+
+
+
+class TBFSGraph : public Graph<TBFSNode, Edge<int> > {
+    virtual void processOnGrey(TBFSNode& node) {
+        node.setInTree(true);
+    }
+};
+
 class TestGraph {
     public:
         typedef Graph< Node<int>, Edge<int> > TGraph;
@@ -103,17 +123,24 @@ class TestGraph {
         }
 
         void testReset(RESET reset) {
-            TGraph* g = new Graph< Node<int>, Edge<int> >();
-            Node<int>* nodeArr[5];
+            TGraph* g = new TGraph;
+            TGraph g1;
+            Node<int>* nodeArr[100];
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 100; i++) {
                 nodeArr[i] = new Node<int>(i);
-            g->createRandomGraph(5, 0.8, nodeArr);
+                nodeArr[i]->populateNode(true, 10);
+            }
+
+            g->createRandomGraph(100, 0.8, nodeArr);
             Graph< Node<int>, Edge<int> >  g2 = *g;
             g->reset(reset);
             if (reset == TGraph::HARD_RESET) {
                 ASSERT(g->getNVertices() == 0, "There should be no vertices");
                 ASSERT(g->getNEdge() == 0, "There should be no edges");
+                ASSERT(g1 == *g, "Empty graph should match");
+
+                cout << "testReset HARD_RESET Done!" << endl;
             } else {
 
             }
@@ -123,6 +150,25 @@ class TestGraph {
         }
 
         void testBFS() {
+            TBFSGraph g;
+
+            TBFSNode* nodeArr[100];
+
+            for (int i = 0; i < 100; i++) {
+                nodeArr[i] = new TBFSNode(i);
+                nodeArr[i]->populateNode(true, 10);
+            }
+
+            g.createRandomGraph(100, 0.5, true, nodeArr, true);
+
+            g.BreadthFirstSearch(*nodeArr[0]);
+
+            for (int i = 0; i < g.getNVertices(); i++) {
+                ASSERT(g.getNodeByIndex(i).inTree(), "All nodes should be in tree for BFS. i:" << i);
+            }
+
+            cout << "testBFS Done!"<< endl;
+
         }
 
         void testDFS() {
@@ -131,14 +177,14 @@ class TestGraph {
         void testTransposeUndirected() {
             TGraph* g = new Graph< Node<int>, Edge<int> >(false, false, false);
 
-            Node<int>* nodeArr[5];
+            Node<int>* nodeArr[100];
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 100; i++) {
                 nodeArr[i] = new Node<int>(i);
                 nodeArr[i]->populateNode(true, 10);
             }
 
-            g->createRandomGraph(5, 0.5, true, nodeArr);
+            g->createRandomGraph(100, 0.5, true, nodeArr);
             Graph< Node<int>, Edge<int> >  g2 = *g;
             g->transpose();
             ASSERT(*g == g2, "Transpose should be same for undirected graph");
@@ -147,21 +193,21 @@ class TestGraph {
 
         void testTransposeDirected() {
             TGraph* g = new Graph< Node<int>, Edge<int> >(true, true, true);
-            Node<int>* nodeArr[5];
+            Node<int>* nodeArr[100];
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 100; i++) {
                 nodeArr[i] = new Node<int>(i);
                 nodeArr[i]->populateNode(true, 10);
             }
 
-            g->createRandomGraph(5, 0.5, true, nodeArr);
+            g->createRandomGraph(100, 0.5, true, nodeArr);
             Graph< Node<int>, Edge<int> >  g2 = *g;
 
             g->transpose();
             g->transpose();
 
-//            g1->transpose();
             ASSERT(*g == g2, "Transpose of transpose should be same");
+
             // Test tranpose
             std::cout << "testTransposeDirected Done!"<<endl;
         }
@@ -175,5 +221,7 @@ int main() {
     test.testCreateDirectedEdge();
     test.testTransposeUndirected();
     test.testTransposeDirected();
+    test.testReset(TestGraph::TGraph::HARD_RESET);
+    test.testBFS();
     return 0;
 }

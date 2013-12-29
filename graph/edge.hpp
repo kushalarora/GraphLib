@@ -38,10 +38,8 @@ class Edge {
         static int count;
         EDGE_TYPE type;
         int id;
-
-        void setNext(Edge<T>* next) {
-            this->next = next;
-        }
+    protected:
+        void setNext(Edge<T>* next) { this->next = next; }
         void setType(EDGE_TYPE edge_type) { this->type = edge_type;}
         void setId(int Id) { id = Id;}
 
