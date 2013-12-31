@@ -23,7 +23,7 @@ template<typename T>
 class Node {
     protected:
         enum COLOR {WHITE, GRAY, BLACK};
-
+        enum RESET {HARD_RESET, SOFT_RESET};
     public:
         static string DEFAULT_LABEL;
 
@@ -87,7 +87,7 @@ class Node {
     protected:
 
 
-        virtual void reset();
+        virtual void reset(RESET reset);
         void setValue(T& val) {value = val;}
         void setLabel(string lbl) {label = lbl;}
 
@@ -170,12 +170,16 @@ Node<T>::Node(T& val, string lbl):
     in_tree(false) {}
 
 template<typename T>
-void Node<T>::reset() {
+void Node<T>::reset(RESET reset) {
+    if (reset == HARD_RESET) {
+        edge_list = NULL;
+        adj_index = -1;
+        in_deg = 0;
+        out_deg = 0;
+    }
     color = WHITE;
     parent = NULL;
     source = NULL;
-    in_deg = 0;
-    out_deg = 0;
 
     // BFS specific
     dist2s = -1;

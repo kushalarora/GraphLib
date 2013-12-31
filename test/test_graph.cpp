@@ -73,9 +73,7 @@ class TestGraph {
             int i = 0;
 
             ASSERT(g->getNVertices() == size, "Count of nodes wrong Size:" << size << ", NVertices:" << g->getNVertices());
-            for (int i = 0; i < g->getNVertices(); i++) {
-                ASSERT(g->getNodeByIndex(i)  == nodeArr[i], "Nodes should match Node");
-            }
+            ASSERT(g->containsNode(nodeArr[i]), "Nodes should match Node");
 
             cout << "testInsert Done!"<<endl;
         }
@@ -91,18 +89,19 @@ class TestGraph {
             g->createEdge(node1, node2);
 
             ASSERT(g->getNEdge() == 1 , "Should have two edges");
-            ASSERT(node1.getInDegree() == 1, "In Degree should have been 1, its " + node1.getInDegree());
-            ASSERT(node1.getOutDegree() == 1, "In Degree should have been 1, its " + node1.getOutDegree());
-            ASSERT(node2.getInDegree() == 1, "In Degree should have been 1, its " + node1.getInDegree());
-            ASSERT(node2.getOutDegree() == 1, "In Degree should have been 1, its " + node1.getOutDegree());
+            ASSERT(g->getInDegreeForNode(node1) == 1, "In Degree should have been 1, its " + g->getInDegreeForNode(node1));
+            ASSERT(g->getOutDegreeForNode(node2) == 1, "In Degree should have been 1, its " + g->getOutDegreeForNode(node2));
+            ASSERT(g->getInDegreeForNode(node2) == 1, "In Degree should have been 1, its " + g->getInDegreeForNode(node2));
+            ASSERT(g->getOutDegreeForNode(node2) == 1, "In Degree should have been 1, its " + g->getOutDegreeForNode(node2));
 
-            ASSERT(node1.getEdgeList() != NULL, "Node1 should have one edge");
-            ASSERT(node2.getEdgeList() != NULL, "Node2 should have one edge");
-            ASSERT(node1.getEdgeList()->getId() == node2.getEdgeList()->getId(), "Id of edge should match.");
+            vector< Edge<int> > edges1 = g->getOutEdgesForNode(node1);
+            vector< Edge<int> > edges2 = g->getOutEdgesForNode(node2);
+            ASSERT(edges1.size() == 1, "Node1 should have one edge");
+            ASSERT(edges2.size() == 1, "Node1 should have one edge");
+            ASSERT(*(edges1.begin()) == *(edges2.begin()), "Id of edge should match.");
             cout << "testCreateUndirectedEdge Done!"<<endl;
         }
 
-/*
         void testCreateDirectedEdge() {
             int val = 10, val1 = 20;
             Node<int> node3 = Node<int>(val);
@@ -112,33 +111,37 @@ class TestGraph {
             g->insertNode(node4);
             g->createEdge(node3, node4);
             ASSERT(g->getNEdge() == 1, "Should have one edges");
-            ASSERT(node3.getOutDegree() == 1, "In Degree should have been 1, its " << node3.getOutDegree());
-            ASSERT(node4.getInDegree() == 1, "In Degree should have been 1, its " << node4.getInDegree());
+            ASSERT(g->getOutDegreeForNode(node3) == 1, "In Degree should have been 1, its " + g->getOutDegreeForNode(node3));
 
-            ASSERT(node3.getEdgeList() != NULL, "Node1 should have one edge");
+            ASSERT(g->getInDegreeForNode(node4) == 1, "In Degree should have been 1, its " + g->getInDegreeForNode(node4));
+
+            vector< Edge<int> > edges = g->getOutEdgesForNode(node3);
+            ASSERT(edges.size() == 1, "Node1 should have one edge");
+
             cout << "testCreateDirectedEdge Done!"<<endl;
         }
 
         void testRandomGraph() {
         }
 
+        // TODO: Memory issues in reset.
         void testReset(RESET reset) {
             TGraph* g = new TGraph;
-            TGraph g1;
+            TGraph *g1 = new TGraph();
             Node<int>* nodeArr[100];
 
             for (int i = 0; i < 100; i++) {
                 nodeArr[i] = new Node<int>(i);
-                nodeArr[i]->populateNode(true, 10);
-            }
+                nodeArr[i]->populateNode(true);
 
+            }
             g->createRandomGraph(100, 0.8, nodeArr);
             Graph< Node<int>, Edge<int> >  g2 = *g;
             g->reset(reset);
             if (reset == TGraph::HARD_RESET) {
                 ASSERT(g->getNVertices() == 0, "There should be no vertices");
                 ASSERT(g->getNEdge() == 0, "There should be no edges");
-                ASSERT(g1 == *g, "Empty graph should match");
+                ASSERT(*g1 == *g, "Empty graph should match");
 
                 cout << "testReset HARD_RESET Done!" << endl;
             } else {
@@ -156,19 +159,19 @@ class TestGraph {
 
             for (int i = 0; i < 100; i++) {
                 nodeArr[i] = new TBFSNode(i);
-                nodeArr[i]->populateNode(true, 10);
+                nodeArr[i]->populateNode(true);
             }
 
+            cout <<"EdgeCount: " << g.getNEdge()<<endl;
             g.createRandomGraph(100, 0.5, true, nodeArr, true);
 
             g.BreadthFirstSearch(*nodeArr[0]);
-
-            for (int i = 0; i < g.getNVertices(); i++) {
-                ASSERT(g.getNodeByIndex(i).inTree(), "All nodes should be in tree for BFS. i:" << i);
+            typename TBFSGraph::iterator it;
+            for (it = g.begin(); it != g.end(); it++) {
+                ASSERT((it->second).inTree(), "All nodes should be in tree for BFS. i:" << it->first);
             }
 
             cout << "testBFS Done!"<< endl;
-
         }
 
         void testDFS() {
@@ -181,7 +184,7 @@ class TestGraph {
 
             for (int i = 0; i < 100; i++) {
                 nodeArr[i] = new Node<int>(i);
-                nodeArr[i]->populateNode(true, 10);
+                nodeArr[i]->populateNode(true);
             }
 
             g->createRandomGraph(100, 0.5, true, nodeArr);
@@ -197,7 +200,7 @@ class TestGraph {
 
             for (int i = 0; i < 100; i++) {
                 nodeArr[i] = new Node<int>(i);
-                nodeArr[i]->populateNode(true, 10);
+                nodeArr[i]->populateNode(true);
             }
 
             g->createRandomGraph(100, 0.5, true, nodeArr);
@@ -212,6 +215,7 @@ class TestGraph {
             std::cout << "testTransposeDirected Done!"<<endl;
         }
 
+/*
         */
 };
 
@@ -220,12 +224,12 @@ int main() {
     test.testEmpty();
     test.testInsertNode();
     test.testCreateUndirectedEdge();
-    /*
     test.testCreateDirectedEdge();
+    test.testBFS();
     test.testTransposeUndirected();
     test.testTransposeDirected();
     test.testReset(TestGraph::TGraph::HARD_RESET);
-    test.testBFS();
+    /*
     */
     return 0;
 }

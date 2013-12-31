@@ -93,10 +93,10 @@ class Graph {
         typedef typename map<int, V>::iterator iterator;
         iterator begin()  { return edgeNode.begin();}
         iterator end()  { return edgeNode.end();}
-
+        bool containsNode(const V& node) { return edgeNode.find(node.getId()) != edgeNode.end();}
         vector<E>& getOutEdgesForNode(V& node);
-        int getInDegreeForNode(V& node);
-        int getOutDegreeForNode(V& node);
+        int getInDegreeForNode(const V& node);
+        int getOutDegreeForNode(const V& node);
 
         // Traversal Specific functions
         void BreadthFirstSearch(V& source);
@@ -171,9 +171,27 @@ void Graph<V,E>::insertNode(V& node) {
     node1->setAdjecencyIndex(getNVertices());
     if (edgeNode.find(node.getId()) == edgeNode.end())
         edgeNode.insert(std::pair<int, V>(node.getId(), *node1));
-
 }
 
+template<class V, class E>
+int Graph<V,E>::getInDegreeForNode(const V& node) {
+    iterator it = edgeNode.find(node.getId());
+    if (it == edgeNode.end()) {
+        cerr << "Node not found";
+        return -1;
+    }
+    return (it->second).getInDegree();
+}
+
+template<class V, class E>
+int Graph<V,E>::getOutDegreeForNode(const V& node) {
+    iterator it = edgeNode.find(node.getId());
+    if (it == edgeNode.end()) {
+        cerr << "Node not found";
+        return -1;
+    }
+    return (it->second).getOutDegree();
+}
 
 template<class V, class E>
 vector<E>& Graph<V,E>::getOutEdgesForNode(V& node) {
@@ -182,7 +200,7 @@ vector<E>& Graph<V,E>::getOutEdgesForNode(V& node) {
     iterator it;
     V* internal_node = NULL;
     if ((it = edgeNode.find(node.getId())) != edgeNode.end()) {
-        internal_node = it->second;
+        internal_node = &it->second;
     }
 
     if (internal_node == NULL) {
@@ -190,7 +208,7 @@ vector<E>& Graph<V,E>::getOutEdgesForNode(V& node) {
     } else {
         E* edge = internal_node->getEdgeList();
         while(edge != NULL) {
-            edges.push_back(edge);
+            edges->push_back(*edge);
             edge = edge->getNext();
         }
     }
@@ -356,7 +374,7 @@ void Graph<V,E>::reset(RESET reset) {
     } else {
         for (iterator it = edgeNode.begin();
                 it != edgeNode.end(); it++)
-            (it->second).reset();
+            (it->second).reset(V::SOFT_RESET);
         }
     }
 
@@ -378,7 +396,7 @@ void Graph<V,E>::hardResetGraph() {
             edge = tmp;
         }
         (it->second).setEdgeList(NULL);
-        (it->second).reset();
+        (it->second).reset(V::HARD_RESET);
 
     }
     nEdges = 0;
@@ -388,6 +406,15 @@ void Graph<V,E>::hardResetGraph() {
 
 template<class V, class E>
 void Graph<V,E>::BreadthFirstSearch(V& source) {
+
+    if (edgeNode.find(source.getId()) == edgeNode.end()) {
+        cerr << "Node not present" << endl;
+        return;
+    }
+
+    // Get the internal corresponding node and run that.
+    source = edgeNode.find(source.getId())->second;
+
     queue<V*> q;
     source.setColor(V::GRAY);
     E* edge;
@@ -545,17 +572,23 @@ void Graph<V,E>::topsort() {
 
 template<class V, class E>
 bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
-    if (getNVertices() != graph.getNVertices())
+    if (getNVertices() != graph.getNVertices()) {
         return false;
+    }
 
-    if (getNEdge() != graph.getNEdge())
+    if (getNEdge() != graph.getNEdge()) {
         return false;
+    }
+
     for(iterator it = graph.begin(); it != graph.end(); it++) {
-        if (edgeNode.find(it->first) == edgeNode.end())
-            return false;
 
-        V& node = edgeNode.find(it->first);
-        E* tmp1 = node.getEdgeList();
+        if (edgeNode.find(it->first) == edgeNode.end()) {
+            return false;
+        }
+
+        V* node = &(edgeNode.find(it->first)->second);
+
+        E* tmp1 = node->getEdgeList();
         E* tmp2 = (it->second).getEdgeList();
 
         bool edge_found = false;
@@ -565,8 +598,9 @@ bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
                     edge_found = true;
                 tmp1 = tmp1->getNext();
             }
-            if (!edge_found)
+            if (!edge_found) {
                 return false;
+            }
             tmp2 = tmp2->getNext();
         }
     }
@@ -581,15 +615,16 @@ Graph<V,E>::Graph(Graph<V,E>& graph) {
     nEdges = 0;
     for(iterator it = graph.begin(); it != graph.end(); it++) {
          V* node = new V(it->second);
-        insertNode(*node);
+         node->reset(V::HARD_RESET);
+         insertNode(*node);
     }
     assert(graph.getNVertices() == getNVertices());
 
     for(iterator it = graph.begin(); it != graph.end(); it++) {
         E* tmp = (it->second).getEdgeList();
         while(tmp != NULL) {
-            createEdge( edgeNode[(tmp->getCurrentNode()).getId()],
-                        edgeNode[(tmp->getOtherNode()).getId()],
+            createEdge( edgeNode.at((tmp->getCurrentNode()).getId()),
+                        edgeNode.at((tmp->getOtherNode()).getId()),
                         tmp->getWeight());
             tmp = tmp->getNext();
         }
@@ -604,6 +639,7 @@ Graph<V,E>& Graph<V,E>::operator =(Graph<V,E>& graph) {
     nEdges = 0;
     for(iterator it = graph.begin(); it != graph.end(); it++) {
          V* node = new V(it->second);
+         node->reset(V::HARD_RESET);
         insertNode(*node);
     }
     assert(graph.getNVertices() == getNVertices());
@@ -611,8 +647,8 @@ Graph<V,E>& Graph<V,E>::operator =(Graph<V,E>& graph) {
     for(iterator it = graph.begin(); it != graph.end(); it++) {
         E* tmp = (it->second).getEdgeList();
         while(tmp != NULL) {
-            createEdge( edgeNode[(tmp->getCurrentNode()).getId()],
-                        edgeNode[(tmp->getOtherNode()).getId()],
+            createEdge( edgeNode.at((tmp->getCurrentNode()).getId()),
+                        edgeNode.at((tmp->getOtherNode()).getId()),
                         tmp->getWeight());
             tmp = tmp->getNext();
         }
@@ -650,9 +686,8 @@ void Graph<V,E>::deleteEdge(E* edge) {
 template<class V, class E>
 void Graph<V,E>::transpose() {
     if (isDirected()) {
-        typename vector < V* >::iterator it;
         int largest_edge_id = -1;
-        for (it = edgeNode.begin(); it != edgeNode.end(); it++) {
+        for (iterator it = edgeNode.begin(); it != edgeNode.end(); it++) {
             E* tmp = (it->second).getEdgeList();
 
             while(tmp != NULL) {
@@ -662,7 +697,7 @@ void Graph<V,E>::transpose() {
                 tmp = tmp->getNext();
             }
         }
-        for (it = edgeNode.begin(); it != edgeNode.end(); it++) {
+        for (iterator it = edgeNode.begin(); it != edgeNode.end(); it++) {
             E* tmp = (it->second).getEdgeList();
 
             while(tmp != NULL) {
