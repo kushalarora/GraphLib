@@ -217,26 +217,26 @@ template<typename T>
 Node<T>::Node(const Node<T>& node):
     value(node.getValue()),
     label(node.getLabel()),
-    id(count++),
-    edge_list(NULL),
-    adj_index(-1),
-    in_deg(0),
-    out_deg(0),
+    id(node.getId()),
+    edge_list(node.getEdgeList()),
+    adj_index(node.getAdjecencyIndex()),
+    in_deg(node.getInDegree()),
+    out_deg(node.getOutDegree()),
 
     // Traversal Specific
-    color(WHITE),
-    parent(NULL),
-    source(NULL),
+    color(node.getColor()),
+    parent(node.getParent()),
+    source(node.getSource()),
 
     // BFS specific
-    dist2s(-1),
+    dist2s(node.getDist2Source()),
 
     // DFS specific
-    entry_index(-1),
-    exit_index(-1),
+    entry_index(node.getEntryTime()),
+    exit_index(node.getExitTime()),
 
     // Spanning Tree Related
-    in_tree(false) {}
+    in_tree(node.isInTree()) {}
 
 
 // nodes are equal if either they are same or have same label.
@@ -263,6 +263,26 @@ template<typename T>
 Node<T>& Node<T>::operator =(const Node<T>& node) {
     value = node.getValue();
     label = node.getLabel();
+    id = node.getId();
+    edge_list = node.getEdgeList();
+    adj_index = node.getAdjecencyIndex();
+    in_deg = node.getInDegree();
+    out_deg = node.getOutDegree();
+
+    // Traversal Specific
+    color = node.getColor();
+    parent = node.getParent();
+    source = node.getSource();
+
+    // BFS specific
+    dist2s = node.getDist2Source();
+
+    // DFS specific
+    entry_index = node.getEntryTime();
+    exit_index = node.getExitTime();
+
+    // Spanning Tree Related
+    in_tree = node.isInTree();
     return *this;
 }
 template<typename T>

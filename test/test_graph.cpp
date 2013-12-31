@@ -60,7 +60,7 @@ class TestGraph {
             vector< Node<int> > nodeArr;
             for(int i = 0; i < 10; i++) {
                 Node<int> node = Node<int>(i);
-                node.populateNode(true, 10);
+                node.populateNode(10);
                 nodeArr.push_back(node);
             }
 
@@ -79,7 +79,6 @@ class TestGraph {
 
             cout << "testInsert Done!"<<endl;
         }
-
         void testCreateUndirectedEdge() {
             int val = 10, val1 = 20;
             Node<int> node1 = Node<int>(val);
@@ -103,6 +102,7 @@ class TestGraph {
             cout << "testCreateUndirectedEdge Done!"<<endl;
         }
 
+/*
         void testCreateDirectedEdge() {
             int val = 10, val1 = 20;
             Node<int> node3 = Node<int>(val);
@@ -211,6 +211,8 @@ class TestGraph {
             // Test tranpose
             std::cout << "testTransposeDirected Done!"<<endl;
         }
+
+        */
 };
 
 int main() {
@@ -218,10 +220,12 @@ int main() {
     test.testEmpty();
     test.testInsertNode();
     test.testCreateUndirectedEdge();
+    /*
     test.testCreateDirectedEdge();
     test.testTransposeUndirected();
     test.testTransposeDirected();
     test.testReset(TestGraph::TGraph::HARD_RESET);
     test.testBFS();
+    */
     return 0;
 }
