@@ -6,10 +6,23 @@
 #define __NODE__
 using namespace std;
 
+/*
+ * Node class to be used by Graph. Can and should be subclassed while implementing new algorithms over graph
+ * that would need some data tracking on node basis. Like Color, is touched etc.
+ *
+ * For standard algorithms, the interface exposed is set to minimum
+ * User interacts with only limited members. These members are either set by user(value and label) or identify node uniquely(id for example).
+ * These members only are garunteed to user while copying or assigning objects.
+ * At the same time only these variable are used in testing equality between two objects.
+ */
+
+
 template<class V, class E> class Graph;
 
 template<typename T>
 class Node {
+    protected:
+        enum COLOR {WHITE, GRAY, BLACK};
 
     public:
         static string DEFAULT_LABEL;
@@ -18,44 +31,41 @@ class Node {
         Node(T& value, string label);
         Node(const Node& node);
 
-        Node* getSource() const {return source;}
+        // Populate node with random label
+        virtual void populateNode(int graph_size);
+
+        // Prints the value of node
+        // User can add more values by subclassing
+        // Again in default mode should print what is exposed by getters
+        virtual void printNode();
+
+
+        // Class must expose getters for only those
+        // members that can be set by users
+        //
+        // So on similar lines only these values
+        // should be used to define equality
+        //
+        // User should not be concerned with how graph
+        // manipulates these variables
+        // Its not in user domain
         int getId() const {return id;}
         T& getValue() const {return value;}
-        Edge<T>* getEdgeList() const {return edge_list;}
         string getLabel() const {return label;}
-        int getAdjecencyIndex() const {return adj_index;}
-        int getInDegree() const {return in_deg;}
-        int getOutDegree() const {return out_deg;}
-        bool isInTree() const {return in_tree;}
-        virtual void populateNode(bool labelled, int seed);
-        virtual void printNode();
-        virtual void reset();
-
-        // Traversal Specific
-        enum COLOR {WHITE, GRAY, BLACK};
-        COLOR getColor() const {return color;}
-        Node* getParent() const {return parent;}
-
-        // BFS specific
-        int getDist2Source() const {return dist2s;}
-
-        // DFS Specific
-        int getEntryTime() const { return entry_index;}
-        int getExitTime() const { return exit_index;}
 
         bool operator ==(const Node& node2);
         bool operator !=(const Node& node2);
         Node& operator =(const Node& node2);
-        friend ostream& operator <<(ostream& os, const Node& node);
-        template<class V, class E> friend class Graph;
 
     private:
         static int count;
         string label;   // labels are unique
         T& value;      // need not be unique
-        Edge<T>* edge_list;     // linked list of edges.
-        int adj_index;
         int id;
+
+        int adj_index;
+
+        Edge<T>* edge_list;     // linked list of edges.
         int out_deg;
         int in_deg;
 
@@ -73,27 +83,58 @@ class Node {
 
         // Spanning Tree Related
         bool in_tree;
+
     protected:
+
+
+        virtual void reset();
         void setValue(T& val) {value = val;}
         void setLabel(string lbl) {label = lbl;}
+
+        static string createRandomLabels(int nVertices);
+
+        Edge<T>* getEdgeList() const {return edge_list;}
+        void setEdgeList(Edge<T>* edge) {edge_list = edge;}
+
+        int getAdjecencyIndex() const {return adj_index;}
         void setAdjecencyIndex(int index) {adj_index = index;}
 
-        string createRandomLabels(int nVertices);
 
-        void setColor(COLOR color) {this->color = color;}
-        void setParent(Node& node) {this->parent = &node;}
-        void setSource(Node& node) {this->source = &node;}
-        void setDist2Source(int dist) {this->dist2s = dist;}
-        void setEntryTime(int entry_idx) { entry_index = entry_idx;}
-        void setEdgeList(Edge<T>* edge) {edge_list = edge;}
-        void setInTree(bool in_tree) {this->in_tree = in_tree;}
-
-        void setExitTime(int exit_idx) { exit_index = exit_idx;}
         void incOutDegree() {out_deg++;}
         void incInDegree() {in_deg++;}
         void decOutDegree() {out_deg--;}
         void decInDegree() {in_deg--;}
 
+        int getInDegree() const {return in_deg;}
+        int getOutDegree() const {return out_deg;}
+
+        // Traversal Specific
+        COLOR getColor() const {return color;}
+        void setColor(COLOR color) {this->color = color;}
+
+        Node* getParent() const {return parent;}
+        void setParent(Node& node) {this->parent = &node;}
+
+        Node* getSource() const {return source;}
+        void setSource(Node& node) {this->source = &node;}
+
+        // BFS specific
+        int getDist2Source() const {return dist2s;}
+        void setDist2Source(int dist) {this->dist2s = dist;}
+
+        // DFS Specific
+        int getEntryTime() const { return entry_index;}
+        void setEntryTime(int entry_idx) { entry_index = entry_idx;}
+
+        int getExitTime() const { return exit_index;}
+        void setExitTime(int exit_idx) { exit_index = exit_idx;}
+
+        void setInTree(bool in_tree) {this->in_tree = in_tree;}
+        bool isInTree() const {return in_tree;}
+
+        friend ostream& operator <<(ostream& os, const Node& node);
+        template<class V, class E> friend class Graph;
+        friend class TestNode;
 };
 
 
@@ -107,11 +148,11 @@ template<typename T>
 Node<T>::Node(T& val, string lbl):
     value(val),
     label(lbl),
-    edge_list(NULL),
-    adj_index(-1),
     id(count++),
-    in_deg(0),
+    adj_index(-1),
+    edge_list(NULL),
     out_deg(0),
+    in_deg(0),
 
     // Traversal Specific
     color(WHITE),
@@ -176,7 +217,7 @@ template<typename T>
 Node<T>::Node(const Node<T>& node):
     value(node.getValue()),
     label(node.getLabel()),
-    id(node.getId()),
+    id(count++),
     edge_list(NULL),
     adj_index(-1),
     in_deg(0),
@@ -201,10 +242,15 @@ Node<T>::Node(const Node<T>& node):
 // nodes are equal if either they are same or have same label.
 template<typename T>
 bool Node<T>::operator==(const Node<T>& node2) {
-    return (this == &node2 ||  // if pointer matches, return true
+            // if pointer matches, return true
+    return (this == &node2 ||
+            // else if id matches
             id == node2.getId() ||
-         (getValue() == node2.getValue() &&
-            (getLabel() == DEFAULT_LABEL ||
+            // else value should match and
+            (getValue() == node2.getValue() &&
+            // and label too if not default
+             ((getLabel() == DEFAULT_LABEL &&
+              node2.getLabel() == DEFAULT_LABEL) ||
              getLabel() == node2.getLabel())));
 }
 
@@ -215,20 +261,16 @@ bool Node<T>::operator!=(const Node<T>& node2) {
 
 template<typename T>
 Node<T>& Node<T>::operator =(const Node<T>& node) {
-
     value = node.getValue();
     label = node.getLabel();
-    id = node.getId();
     return *this;
 }
 template<typename T>
 void Node<T>::printNode() {
-    cout << "( " << getId() << " ";
+    cout << "(" << getId() << ", ";
     if (this->getLabel().length() > 0)
-        cout << getLabel() << " ";
-    if (getValue() > -1)
-         cout << getValue() << " ";
-     cout << ")";
+        cout << getLabel() << ", ";
+     cout << getValue() << ")";
 }
 
 template<typename T>
@@ -243,9 +285,8 @@ string Node<T>::createRandomLabels(int nVertices) {
 }
 
 template<typename T>
-void Node<T>::populateNode(bool labelled, int seed) {
-    if (labelled)
-        this->setLabel(createRandomLabels(seed));
+void Node<T>::populateNode(int graph_size) {
+    this->setLabel(createRandomLabels(graph_size));
 }
 
 template<typename T>

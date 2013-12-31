@@ -7,27 +7,31 @@ using namespace std;
 template<typename T> class Node;
 template<class V, class E> class Graph;
 
+/*
+ * User cannot create an edge. At most it can do is get an edge
+ * and run some getters on it to know the nodes associated with it,
+ * its weight etc.
+ *
+ * Class can be subclassed to add more fields in user domain or for accounting
+ * A good example will be a subclassing to be reperesent edge in knowledge bases
+ * where edge will represent relation between two categories.
+ */
+
 template<typename T>
 class Edge {
     public:
         const static float DEFAULT_WEIGHT = 0.0f;
-        static int getNewId() { return count++;}
         enum EDGE_TYPE {NA, TREE_EDGE, BACK_EDGE, FORWARD_EDGE, CROSS_EDGE};
-        Edge(Node<T>& n1, Node<T>& n2);
-        Edge(Node<T>& n1, Node<T>& n2, bool is_directed, float weight);
-        Edge(Node<T>& n1, Node<T>& n2, bool is_directed);
-        Edge(Node<T>& n1, Node<T>& n2, float weight);
-        Edge<T>* getNext() const {return next;}
+
         Node<T>& getCurrentNode() const {return node1;}
         Node<T>& getOtherNode() const { return node2;}
         bool isDirected() const {return is_directed;}
         float getWeight() const {return weight;}
-        EDGE_TYPE getType() const { return type;}
         int getId() const { return id;}
+        virtual void printEdge();
+
         bool operator ==(const Edge<T>& edge2);
         bool operator !=(const Edge<T>& edge2);
-        void printEdge();
-        void reset();
 
     private:
         Node<T>& node1;
@@ -39,11 +43,31 @@ class Edge {
         EDGE_TYPE type;
         int id;
     protected:
-        void setNext(Edge<T>* next) { this->next = next; }
-        void setType(EDGE_TYPE edge_type) { this->type = edge_type;}
+
+        // As with the node, user has no business of constructing an edge
+        // This is sole perogative of graph
+        // Hence except for copy constructor all edges should be hidden.
+        Edge(Node<T>& n1, Node<T>& n2);
+        Edge(Node<T>& n1, Node<T>& n2, bool is_directed, float weight);
+        Edge(Node<T>& n1, Node<T>& n2, bool is_directed);
+        Edge(Node<T>& n1, Node<T>& n2, float weight);
+
         void setId(int Id) { id = Id;}
+        static int getNewId() { return count++;}
+
+
+        void setNext(Edge<T>* next) { this->next = next; }
+        Edge<T>* getNext() const {return next;}
+
+        EDGE_TYPE getType() const { return type;}
+        void setType(EDGE_TYPE edge_type) { this->type = edge_type;}
+
+        // Edge can be reset only by graph.
+        // User have no business of reseting an edge
+        virtual void reset();
 
         template<class V, class E> friend class Graph;
+        friend class TestEdge;
 };
 
 template<typename T>
@@ -96,10 +120,15 @@ Edge<T>::Edge(Node<T>& n1, Node<T>& n2, float weight) :
 
 template<typename T>
 bool Edge<T>::operator ==(const Edge& edge2) {
-    return (id == edge2.getId() ||
-        ((this->getCurrentNode() == edge2.getCurrentNode()) &&
-            (this->getOtherNode() == edge2.getOtherNode()) &&
-                (this->getWeight() == edge2.getWeight())));
+    return ( // return true if id is same or
+            id == edge2.getId() ||
+            // both nodes are same and
+            ((this->getCurrentNode() == edge2.getCurrentNode()) &&
+                (this->getOtherNode() == edge2.getOtherNode()) &&
+                // both are either directed or undirected and
+                (isDirected() == edge2.isDirected()
+                // weight too is same.
+                (this->getWeight() == edge2.getWeight()))));
 }
 
 template<typename T>
@@ -115,5 +144,4 @@ void Edge<T>::printEdge() {
         cout << ", " << getWeight();
     cout <<" "<< "-->";
 }
-
 #endif

@@ -70,7 +70,7 @@ class Graph {
         Graph(Graph& graph);
         ~Graph();
         Graph(bool directed, bool weighted, bool labelled);
-        V& insertNode(V& node);
+        V& insertNode(V& val);
         void createEdge(V& V1, V& V2);
         void createEdge(V& V1, V& V2, float weight);
         inline bool isWeighted() const {return weighted;}
@@ -91,6 +91,7 @@ class Graph {
         bool isCyclic();
         void topsort();
         void transpose();
+        vector<E>& getOutEdgesForNode(V& node);
 
         // Traversal Specific functions
         void BreadthFirstSearch(V& source);
@@ -167,6 +168,30 @@ V& Graph<V,E>::insertNode(V& node) {
 }
 
 
+template<class V, class E>
+vector<E>& Graph<V,E>::getOutEdgesForNode(V& node) {
+    vector<E>* edges = new vector<E>();
+
+    typename vector<V*>::iterator it;
+    V* internal_node = NULL;
+    for (it = edgeNode.begin(); it != edgeNode.end(); it++) {
+        if (node == *(*it)) {
+            internal_node = it;
+            break;
+        }
+    }
+
+    if (internal_node == NULL) {
+        cerr << "Node not found";
+    } else {
+        E* edge = internal_node->getEdgeList();
+        while(edge != NULL) {
+            edges.push_back(edge);
+            edge = edge->getNext();
+        }
+    }
+    return *edges;
+}
 template<class V, class E>
 void Graph<V,E>::createEdge(V& V1, V& V2, float weight) {
     V* nodeArr[2] = {&V1, &V2};
@@ -264,7 +289,7 @@ void Graph<V,E>::createRandomGraph(int nVertices, float density, bool strictly_a
     if (nVertices < 1)
         return;
     for (int i = 0; i < nVertices; i++) {
-        nodes[i]->populateNode(isLabelled(), nVertices);
+        nodes[i]->populateNode(nVertices);
         insertNode(*nodes[i]);
     }
     int connected_edges = 0;
