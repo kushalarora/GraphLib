@@ -72,20 +72,26 @@ class Graph {
         void insertNode(V& val);
         void createEdge(V& V1, V& V2);
         void createEdge(V& V1, V& V2, float weight);
+
         inline bool isWeighted() const {return weighted;}
         inline bool isDirected() const {return directed;}
         inline bool isLabelled() const {return labelled;}
+
         virtual void printGraph();
+
         virtual void createRandomGraph(int nVertices, V** nodes);
         virtual void createRandomGraph(int nVertices, V** nodes, bool connected);
         virtual void createRandomGraph(int nVertices, float density, V** nodes);
         virtual void createRandomGraph(int nVertices, float density, V** nodes, bool connected);
         virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic, V** nodes);
         virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic, V** nodes, bool connected);
+
         int getNVertices() const {return edgeNode.size();}
         int getNEdge() const {return (isDirected() ? nEdges : nEdges/2);}
+
         void reset();
         void reset(RESET reset);
+
         bool isCyclic();
         void topsort();
         void transpose();
@@ -93,6 +99,7 @@ class Graph {
         typedef typename map<int, V>::iterator iterator;
         iterator begin()  { return edgeNode.begin();}
         iterator end()  { return edgeNode.end();}
+
         bool containsNode(const V& node) { return edgeNode.find(node.getId()) != edgeNode.end();}
         vector<E>& getOutEdgesForNode(V& node);
         int getInDegreeForNode(const V& node);
@@ -100,8 +107,8 @@ class Graph {
 
         // Traversal Specific functions
         void BreadthFirstSearch(V& source);
-        void DepthFirstRoutine(V& node);
         void DepthFirstSearch();
+
         bool operator ==(Graph& graph);
         Graph& operator =(Graph& graph);
 
@@ -119,33 +126,43 @@ class Graph {
         void sort(iterator begin, iterator end);
     protected:
         virtual void deleteEdge(E* edge);
-
+        void DepthFirstRoutine(V& node);
         void hardResetGraph();
-        virtual void processEdge(E* edge) {
-#ifdef DEBUG
-            cout << "Processed Edge";
-            (edge->getCurrentNode()).printNode();
-            edge->printEdge();
-            (edge->getOtherNode()).printNode();
-            cout << "\n";
-            cout << "Edge turned " << edge->getType() << endl;
-#endif
-        }
-        virtual void processOnBlack(V& node) {
-#ifdef DEBUG
-            cout << "Node Turned Black ";
-            node.printNode();
-            cout << "\n";
-#endif
-        };
-        virtual void processOnGrey(V& node) {
-#ifdef DEBUG
-            cout << "Node turned Grey ";
-            node.printNode();
-            cout << "\n";
-#endif
-        }
+        virtual void processEdge(E* edge);
+        virtual void processOnBlack(V& node);
+        virtual void processOnGrey(V& node);
+
 };
+
+template<class V, class E>
+void Graph<V,E>::processEdge(E* edge) {
+#ifdef DEBUG
+    cout << "Processed Edge";
+    (edge->getCurrentNode()).printNode();
+    edge->printEdge();
+    (edge->getOtherNode()).printNode();
+    cout << "\n";
+    cout << "Edge turned " << edge->getType() << endl;
+#endif
+}
+
+template<class V, class E>
+void Graph<V,E>::processOnBlack(V& node) {
+#ifdef DEBUG
+    cout << "Node Turned Black ";
+    node.printNode();
+    cout << "\n";
+#endif
+}
+
+template<class V, class E>
+void Graph<V,E>::processOnGrey(V& node) {
+#ifdef DEBUG
+    cout << "Node turned Grey ";
+    node.printNode();
+    cout << "\n";
+#endif
+}
 
 template<class V, class E>
 Graph<V,E>::Graph(bool dirctd, bool wghtd, bool lbled) :

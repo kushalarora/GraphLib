@@ -162,7 +162,6 @@ class TestGraph {
                 nodeArr[i]->populateNode(true);
             }
 
-            cout <<"EdgeCount: " << g.getNEdge()<<endl;
             g.createRandomGraph(100, 0.5, true, nodeArr, true);
 
             g.BreadthFirstSearch(*nodeArr[0]);
