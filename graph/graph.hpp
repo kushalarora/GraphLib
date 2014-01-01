@@ -86,8 +86,8 @@ class Graph {
         virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic, V** nodes);
         virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic, V** nodes, bool connected);
 
-        int getNVertices() const {return edgeNode.size();}
-        int getNEdge() const {return (isDirected() ? nEdges : nEdges/2);}
+        int getNodeCount() const {return edgeNode.size();}
+        int getEdgeCount() const {return (isDirected() ? nEdges : nEdges/2);}
 
         void reset();
         void reset(RESET reset);
@@ -185,7 +185,7 @@ void Graph<V,E>::insertNode(V& node) {
     // Else once function goes out of scope
     // memory will disappear
     V *node1 = new V(node);
-    node1->setAdjecencyIndex(getNVertices());
+    node1->setAdjecencyIndex(getNodeCount());
     if (edgeNode.find(node.getId()) == edgeNode.end())
         edgeNode.insert(std::pair<int, V>(node.getId(), *node1));
 }
@@ -589,11 +589,11 @@ void Graph<V,E>::topsort() {
 
 template<class V, class E>
 bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
-    if (getNVertices() != graph.getNVertices()) {
+    if (getNodeCount() != graph.getNodeCount()) {
         return false;
     }
 
-    if (getNEdge() != graph.getNEdge()) {
+    if (getEdgeCount() != graph.getEdgeCount()) {
         return false;
     }
 
@@ -635,7 +635,7 @@ Graph<V,E>::Graph(Graph<V,E>& graph) {
          node->reset(V::HARD_RESET);
          insertNode(*node);
     }
-    assert(graph.getNVertices() == getNVertices());
+    assert(graph.getNodeCount() == getNodeCount());
 
     for(iterator it = graph.begin(); it != graph.end(); it++) {
         E* tmp = (it->second).getEdgeList();
@@ -659,7 +659,7 @@ Graph<V,E>& Graph<V,E>::operator =(Graph<V,E>& graph) {
          node->reset(V::HARD_RESET);
         insertNode(*node);
     }
-    assert(graph.getNVertices() == getNVertices());
+    assert(graph.getNodeCount() == getNodeCount());
 
     for(iterator it = graph.begin(); it != graph.end(); it++) {
         E* tmp = (it->second).getEdgeList();

@@ -72,7 +72,7 @@ class TestGraph {
             int size = nodeArr.size();
             int i = 0;
 
-            ASSERT(g->getNVertices() == size, "Count of nodes wrong Size:" << size << ", NVertices:" << g->getNVertices());
+            ASSERT(g->getNodeCount() == size, "Count of nodes wrong Size:" << size << ", NVertices:" << g->getNodeCount());
             ASSERT(g->containsNode(nodeArr[i]), "Nodes should match Node");
 
             cout << "testInsert Done!"<<endl;
@@ -88,7 +88,7 @@ class TestGraph {
             g->insertNode(node2);
             g->createEdge(node1, node2);
 
-            ASSERT(g->getNEdge() == 1 , "Should have two edges");
+            ASSERT(g->getEdgeCount() == 1 , "Should have two edges");
             ASSERT(g->getInDegreeForNode(node1) == 1, "In Degree should have been 1, its " + g->getInDegreeForNode(node1));
             ASSERT(g->getOutDegreeForNode(node2) == 1, "In Degree should have been 1, its " + g->getOutDegreeForNode(node2));
             ASSERT(g->getInDegreeForNode(node2) == 1, "In Degree should have been 1, its " + g->getInDegreeForNode(node2));
@@ -110,7 +110,7 @@ class TestGraph {
             g->insertNode(node3);
             g->insertNode(node4);
             g->createEdge(node3, node4);
-            ASSERT(g->getNEdge() == 1, "Should have one edges");
+            ASSERT(g->getEdgeCount() == 1, "Should have one edges");
             ASSERT(g->getOutDegreeForNode(node3) == 1, "In Degree should have been 1, its " + g->getOutDegreeForNode(node3));
 
             ASSERT(g->getInDegreeForNode(node4) == 1, "In Degree should have been 1, its " + g->getInDegreeForNode(node4));
@@ -139,8 +139,8 @@ class TestGraph {
             Graph< Node<int>, Edge<int> >  g2 = *g;
             g->reset(reset);
             if (reset == TGraph::HARD_RESET) {
-                ASSERT(g->getNVertices() == 0, "There should be no vertices");
-                ASSERT(g->getNEdge() == 0, "There should be no edges");
+                ASSERT(g->getNodeCount() == 0, "There should be no vertices");
+                ASSERT(g->getEdgeCount() == 0, "There should be no edges");
                 ASSERT(*g1 == *g, "Empty graph should match");
 
                 cout << "testReset HARD_RESET Done!" << endl;
