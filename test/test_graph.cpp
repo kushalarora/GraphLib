@@ -227,8 +227,8 @@ int main() {
     test.testCreateDirectedEdge();
     test.testBFS();
     test.testTransposeUndirected();
-    test.testTransposeDirected();
     test.testReset(TestGraph::TGraph::HARD_RESET);
+    test.testTransposeDirected();
     /*
     */
     return 0;
