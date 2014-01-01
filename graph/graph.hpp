@@ -231,6 +231,7 @@ vector<E>& Graph<V,E>::getOutEdgesForNode(V& node) {
     }
     return *edges;
 }
+
 template<class V, class E>
 void Graph<V,E>::createEdge(V& V1, V& V2, float weight) {
     V* tempArr[2] = {&V1, &V2};
@@ -256,9 +257,11 @@ void Graph<V,E>::createEdge(V& V1, V& V2, float weight) {
         V* othrNode = nodeArr[1 - idx];
         newEdge = new E(*currNode, *othrNode, isDirected(), weight);
         newEdge->setId(id);
+
         // inserting edge to v2 in v1
         temp = currNode->getEdgeList();
         E* prevEdge = temp;
+
         while(temp != NULL) {
             // if V2 already present do nothing.
             if (((V&)temp->getOtherNode()) == *nodeArr[1 - idx])
@@ -266,6 +269,7 @@ void Graph<V,E>::createEdge(V& V1, V& V2, float weight) {
             prevEdge = temp;
             temp = temp->getNext();
         }
+
         if (prevEdge != NULL)
             prevEdge->setNext(newEdge);
         else
@@ -361,8 +365,7 @@ void Graph<V,E>::createRandomGraph(int nVertices, float density, bool strictly_a
 }
 
 template<class V, class E>
-void Graph<V,E>::createRandomGraph(int nVertices, float density, V** nodes, bool connected) {
-    createRandomGraph(nVertices, density, false, nodes, connected);
+void Graph<V,E>::createRandomGraph(int nVertices, float density, V** nodes, bool connected) { createRandomGraph(nVertices, density, false, nodes, connected);
 }
 template<class V, class E>
 void Graph<V,E>::createRandomGraph(int nVertices, float density, V** nodes) {
@@ -382,6 +385,7 @@ void Graph<V,E>::createRandomGraph(int nVertices, V** nodes) {
 
 template<class V, class E>
 void Graph<V,E>::reset() {
+    reset(SOFT_RESET);
 }
 
 template<class V, class E>
@@ -389,11 +393,10 @@ void Graph<V,E>::reset(RESET reset) {
     if( reset == HARD_RESET) {
        hardResetGraph();
     } else {
-        for (iterator it = edgeNode.begin();
-                it != edgeNode.end(); it++)
+        for (iterator it = edgeNode.begin(); it != edgeNode.end(); it++)
             (it->second).reset(V::SOFT_RESET);
-        }
     }
+}
 
 template<class V, class E>
 Graph<V,E>::~Graph() {
@@ -402,23 +405,18 @@ Graph<V,E>::~Graph() {
 
 template<class V, class E>
 void Graph<V,E>::hardResetGraph() {
-    for (iterator it = edgeNode.begin();
-            it != edgeNode.end(); it++) {
-        E* edge_list = (it->second).getEdgeList();
-        E* edge = edge_list;
-        E* tmp;
+    for (iterator it = edgeNode.begin(); it != edgeNode.end(); it++) {
+        E* edge = (it->second).getEdgeList();
+        E* tmp = NULL;
         while (edge != NULL) {
             tmp = edge->getNext();
             delete edge;
             edge = tmp;
         }
-        (it->second).setEdgeList(NULL);
         (it->second).reset(V::HARD_RESET);
-
     }
     nEdges = 0;
     edgeNode.clear();
-
 }
 
 template<class V, class E>
@@ -437,8 +435,10 @@ void Graph<V,E>::BreadthFirstSearch(V& source) {
     E* edge;
     V* node;
     V* other;
+
     typename V::COLOR clr;
     q.push(&source);
+
     while(!q.empty()) {
         node = q.front();
         processOnGrey(*node);
@@ -534,10 +534,7 @@ bool Graph<V,E>::isCyclic() {
     for (iterator it = begin(); it != end(); it++) {
         V& node = it->second;
 
-        E* edge_list = node.getEdgeList();
-        assert(edge_list != NULL);
-
-        E* edge = edge_list;
+        E* edge = node.getEdgeList();
         while(edge != NULL) {
             if (edge->getType() == E::BACK_EDGE)
                 return true;
@@ -611,8 +608,10 @@ bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
         bool edge_found = false;
         while(tmp2 != NULL) {
             while(tmp1 != NULL) {
-                if (*tmp1 == *tmp2)
+                if (*tmp1 == *tmp2) {
                     edge_found = true;
+                    break;
+                }
                 tmp1 = tmp1->getNext();
             }
             if (!edge_found) {
@@ -632,11 +631,20 @@ Graph<V,E>::Graph(Graph<V,E>& graph) {
     nEdges = 0;
     for(iterator it = graph.begin(); it != graph.end(); it++) {
          V* node = new V(it->second);
+         // Copy constructor copies everything
+         // All you need in new graph is user inputted data and id
+         // So do a hard reset to wipe other data.
+         //
+         // Another reason for doing so is that we want deep copy not shallow
+         // copy
+         // So for that we need to create similar but new edges.
          node->reset(V::HARD_RESET);
+
          insertNode(*node);
     }
     assert(graph.getNodeCount() == getNodeCount());
 
+    // Copying edges
     for(iterator it = graph.begin(); it != graph.end(); it++) {
         E* tmp = (it->second).getEdgeList();
         while(tmp != NULL) {
@@ -648,6 +656,7 @@ Graph<V,E>::Graph(Graph<V,E>& graph) {
     }
 }
 
+// Totally same as above.
 template<class V, class E>
 Graph<V,E>& Graph<V,E>::operator =(Graph<V,E>& graph) {
     directed = graph.isDirected();
@@ -724,6 +733,9 @@ void Graph<V,E>::transpose() {
                 if (tmp->getId() <= largest_edge_id) {
                     E* tmp2 = tmp->getNext();
                     deleteEdge(tmp);
+                    // Id is assigned in create edge
+                    // so copy constructor will not be
+                    // problem
                     createEdge(node2, node1, weight);
                     tmp = tmp2;
                 } else {
