@@ -149,7 +149,27 @@ class TestGraph {
             }
         }
 
-        void testCreateTopsort() {
+        void testTopsort() {
+
+            Node<int>* nodeArr[100];
+
+            for (int i = 0; i < 100; i++) {
+                nodeArr[i] = new Node<int>(i);
+                nodeArr[i]->populateNode(true);
+            }
+
+
+            TGraph *g = new Graph < Node<int>, Edge<int> >(true, true, true);
+
+            g->createRandomGraph(100, 0.5, true, nodeArr);
+
+            g->topsort();
+
+            TGraph::vec_iterator it;
+            for (it = g->nodes.begin(); it != g->nodes.end() - 1; it++) {
+                ASSERT(TGraph::compareExitTimeInc(*it, *(it + 1)), "Top sort should sort in inc order of exit time");
+            }
+            cout << "testTopsort Done!" << endl;
         }
 
         void testBFS() {
@@ -228,6 +248,7 @@ int main() {
     test.testTransposeUndirected();
     test.testReset(TestGraph::TGraph::HARD_RESET);
     test.testTransposeDirected();
+    test.testTopsort();
     /*
     */
     return 0;

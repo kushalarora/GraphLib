@@ -54,6 +54,7 @@
 #include<map>
 #include<set>
 #include<vector>
+#include<algorithm>
 
 #include "edge.hpp"
 #include "node.hpp"
@@ -97,6 +98,7 @@ class Graph {
         void transpose();
 
         typedef typename map<int, V>::iterator iterator;
+        typedef typename vector<V*>::iterator vec_iterator;
         iterator begin()  { return edgeNode.begin();}
         iterator end()  { return edgeNode.end();}
 
@@ -107,7 +109,7 @@ class Graph {
 
         // Traversal Specific functions
         void BreadthFirstSearch(V& source);
-        void DepthFirstSearch();
+        void depthFirstSearch();
 
         bool operator ==(Graph& graph);
         Graph& operator =(Graph& graph);
@@ -123,10 +125,13 @@ class Graph {
         // But the problem is that set returns const reference while dereferencing iterator
         // So using map instead.
         map<int, V> edgeNode;
-        void sort(iterator begin, iterator end);
+        vector<V*> nodes;
+        static bool compareExitTimeInc(V* node1, V* node2) { return node1->getExitTime() < node2->getExitTime();}
+        static bool compareExitTimeDec(V& node1, V& node2) { return node1.getExitTime() > node2.getExitTime();}
+        friend class TestGraph;
     protected:
         virtual void deleteEdge(E* edge);
-        void DepthFirstRoutine(V& node);
+        void depthFirstRoutine(V& node);
         void hardResetGraph();
         virtual void processEdge(E* edge);
         virtual void processOnBlack(V& node);
@@ -188,6 +193,7 @@ void Graph<V,E>::insertNode(V& node) {
     node1->setAdjecencyIndex(getNodeCount());
     if (edgeNode.find(node.getId()) == edgeNode.end())
         edgeNode.insert(std::pair<int, V>(node.getId(), *node1));
+        nodes.push_back(&(edgeNode.find(node1->getId())->second));
 }
 
 template<class V, class E>
@@ -463,7 +469,7 @@ void Graph<V,E>::BreadthFirstSearch(V& source) {
 }
 
 template<class V, class E>
-void Graph<V,E>::DepthFirstRoutine(V& node) {
+void Graph<V,E>::depthFirstRoutine(V& node) {
     static int count = 0;
     E* edge_list = node.getEdgeList();
     E* edge = edge_list;
@@ -508,29 +514,29 @@ void Graph<V,E>::DepthFirstRoutine(V& node) {
 
         if (clr == V::WHITE) {
             other->setParent(node);
-            DepthFirstRoutine(*other);
+            depthFirstRoutine(*other);
         }
         edge = edge->getNext();
     }
 
-    node.setExitTime(count);
+    node.setExitTime(count++);
     node.setColor(V::BLACK);
     processOnBlack(node);
 }
 
 template<class V, class E>
-void Graph<V,E>::DepthFirstSearch() {
+void Graph<V,E>::depthFirstSearch() {
     static int count = 0;
     for (iterator it = begin(); it != end(); it++) {
         V& node = it->second;
         if (node.getColor() == V::WHITE)
-            DepthFirstRoutine(node);
+            depthFirstRoutine(node);
     }
 }
 
 template<class V, class E>
 bool Graph<V,E>::isCyclic() {
-    DepthFirstSearch();
+    depthFirstSearch();
     for (iterator it = begin(); it != end(); it++) {
         V& node = it->second;
 
@@ -544,42 +550,26 @@ bool Graph<V,E>::isCyclic() {
     }
 }
 
-template<class V, class E>
-void Graph<V, E>::sort(iterator begin, iterator end) {
-    if (begin != end) {
-        V& pivotEl = begin->second;
-        iterator it_begin = begin;
-        iterator it_end = end;
-        while(it_begin != it_end) {
-            if ((it_begin->second).getExitTime() < pivotEl.getExitTime()) {
-                it_begin++;
-            } else {
-                swap<V&>(it_begin->second, it_end->second);
-                it_end--;
-            }
-        }
-        swap<V&>(pivotEl, (it_begin - 1)->second);
-        sort(begin, it_begin - 2);
-        sort(it_begin, end);
-    }
-}
 
 template<class V, class E>
 void Graph<V,E>::topsort() {
     // Do depth first search to calculate exit Time.
-    DepthFirstSearch();
+    depthFirstSearch();
 
 #ifdef DEBUG
-    for (iterator it = begin(); it != end(); it++)
-        (it->second).printNode();
+    for (vec_iterator it = nodes.begin(); it != nodes.end(); it++) {
+        cout << (*it)->getExitTime()<<" ";
+    }
     cout << endl;
 #endif
 
-    sort(begin(), end() - 1);
+    sort(nodes.begin(), nodes.end(), compareExitTimeInc);
 
 #ifdef DEBUG
-    for (iterator it = begin(); it != end(); it++)
-        (it->second).printNode();
+
+    for (vec_iterator it = nodes.begin(); it != nodes.end(); it++) {
+        cout << (*it)->getExitTime() << " ";
+    }
     cout << endl;
 #endif
 }
@@ -745,4 +735,5 @@ void Graph<V,E>::transpose() {
         }
     }
 }
+
 #endif
