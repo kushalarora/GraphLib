@@ -13,7 +13,7 @@ class TBFSNode : public Node<int> {
     public:
         TBFSNode(int& val) : Node(val), in_tree(false){}
         TBFSNode(int& val, string label) : Node(val, label), in_tree(false){}
-        TBFSNode(const TBFSNode& node) : Node(node), in_tree(false){}
+        TBFSNode(const TBFSNode& node) : Node(node), in_tree(node.in_tree){}
         friend class TBFSGraph;
         bool inTree() {return in_tree;}
 };
@@ -165,8 +165,8 @@ class TestGraph {
 
             g->topsort();
 
-            TGraph::vec_iterator it;
-            for (it = g->nodes.begin(); it != g->nodes.end() - 1; it++) {
+            TGraph::iterator it;
+            for (it = g->begin(); it != g->end() - 1; it++) {
                 ASSERT(TGraph::compareExitTimeInc(*it, *(it + 1)), "Top sort should sort in inc order of exit time");
             }
             cout << "testTopsort Done!" << endl;
@@ -187,7 +187,8 @@ class TestGraph {
             g.BreadthFirstSearch(*nodeArr[0]);
             typename TBFSGraph::iterator it;
             for (it = g.begin(); it != g.end(); it++) {
-                ASSERT((it->second).inTree(), "All nodes should be in tree for BFS. i:" << it->first);
+                  ASSERT(it->inTree(), "All nodes should be in tree for BFS. i:" << it->getId());
+
             }
 
             cout << "testBFS Done!"<< endl;
