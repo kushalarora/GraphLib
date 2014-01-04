@@ -109,14 +109,14 @@ class GraphBase {
         int getOutDegreeForNode(const V& node) const;
 
         // Traversal Specific functions
-        void BreadthFirstSearch(V& source);
+        void breadthFirstSearch(V& source);
         void depthFirstSearch();
 
         bool operator ==(const GraphBase& graph);
         GraphBase& operator =(const GraphBase& graph);
 
         ComponentGraph& stronglyConnectedComponents();
-
+        V& getNodeById(int id);
     private:
         int nEdges;
         bool directed;
@@ -131,7 +131,6 @@ class GraphBase {
         typedef typename map<const int, int>::iterator mp_iterator;
         typedef typename map<const int, int>::const_iterator const_mp_iterator;
 
-        V& getNodeById(int id);
     protected:
         virtual void deleteEdge(E* edge);
         void depthFirstRoutine(V& node, int component_id);
@@ -473,7 +472,7 @@ void GraphBase<V,E>::hardResetGraph() {
 }
 
 template<class V, class E>
-void GraphBase<V,E>::BreadthFirstSearch(V& source) {
+void GraphBase<V,E>::breadthFirstSearch(V& source) {
 
     if (id_idx_mp.find(source.getId()) == id_idx_mp.end()) {
         cerr << "Node not present" << endl;

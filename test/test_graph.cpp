@@ -183,7 +183,7 @@ class TestGraph {
 
             g.createRandomGraph(100, nodeArr, 0.5, true, true);
 
-            g.BreadthFirstSearch(*nodeArr[0]);
+            g.breadthFirstSearch(*nodeArr[0]);
             typename TBFSGraph::iterator it;
             for (it = g.begin(); it != g.end(); it++) {
                   ASSERT(it->inTree(), "All nodes should be in tree for BFS. i:" << it->getId());
@@ -257,7 +257,7 @@ class TestGraph {
                     // iterate over nodes of graph
                     for(TBFSGraph::iterator it1 = it->begin(); it1 != it->end(); it1++) {
                         // call bfs for each one of the nodes
-                        it->BreadthFirstSearch(*it1);
+                        it->breadthFirstSearch(*it1);
                         TBFSGraph::iterator it2;
                         // see if all other nodes are in tree.
                         for (it2 = it1; it2 != it->end(); it2++) {
