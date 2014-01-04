@@ -835,6 +835,8 @@ typename Graph<V,E>::ComponentGraph& Graph<V,E>::stronglyConnectedComponents() {
 
     // not calling reset because coz other field too might be populated
     for (iterator it = begin(); it != end(); it++) {
+        Graph& graph = comp_graph.getGraphForComponentId(it->getComponentId());
+        graph.insertNode(*it);
         it->setColor(V::WHITE);
     }
 
@@ -845,10 +847,7 @@ typename Graph<V,E>::ComponentGraph& Graph<V,E>::stronglyConnectedComponents() {
         V& node1 = getNodeById(node_id);
         int component_id = node1.getComponentId();
         Graph<V,E>& graph = comp_graph->getGraphForComponentId(component_id);
-        if (node1.getColor() == V::WHITE) {
-            graph.insertNode(node1);
-            node1.setColor(V::GRAY);
-        }
+        node1.setColor(V::GRAY);
 
         E* edge = node1.getEdgeList();
         while(edge != NULL) {
@@ -857,10 +856,6 @@ typename Graph<V,E>::ComponentGraph& Graph<V,E>::stronglyConnectedComponents() {
             V& node2 = getNodeById(edge->getOtherNodeId());
             if (node2.getColor() == V::WHITE) {
                 q.push_back(node2.getId());
-                if (node2.getComponentId() == component_id) {
-                    graph.insertNode(node2);
-                    node2.setColor(V::GRAY);
-                }
             }
             if (component_id == node2.getComponentId()) {
                 graph.createEdge(node1, node2, edge->getWeight());
