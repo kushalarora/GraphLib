@@ -142,5 +142,5 @@ void printEdge();
         // Does a Depth First Search  
         void depthFirstSearch();  
         //  Breaks down a graph into multiple strongly connected graphs.
-        ComponentGraph& stronglyConnectedComponents;
+        ComponentGraph& stronglyConnectedComponents();
   ```
