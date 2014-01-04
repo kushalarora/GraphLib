@@ -1,4 +1,5 @@
 /*
+ * m
  * GRAPH ALOGRITHMS
  *
  * 1. Types of Graphs
@@ -54,6 +55,7 @@
 #include<map>
 #include<set>
 #include<vector>
+#include<list>
 #include<algorithm>
 
 #include "edge.hpp"
@@ -153,7 +155,8 @@ template<class V, class E>
 V& Graph<V,E>::getNodeById(int id) {
     mp_iterator it;
     if ((it = id_idx_mp.find(id)) == id_idx_mp.end()) {
-        cerr << "Node not found";
+        cout << id_idx_mp.size() << endl;
+        cerr << "Node not found Id:" << id <<endl;
         exit(-1);
     }
     return nodes[it->second];
@@ -167,23 +170,33 @@ class Graph<V,E>::ComponentGraph {
 
     public:
         void addEdge(const E edge);
-        Graph& getGraphForComponentId(int i) {return graphs->at(i);}
+        Graph& getGraphForComponentId(int i);
         ComponentGraph(int component_count, bool is_directed, bool is_weighted, bool is_labelled) {
             graphs = new vector< Graph<V,E> >(component_count, Graph<V,E>(is_directed, is_weighted, is_labelled));
         }
         typedef typename vector<Graph>::iterator graph_iterator;
         typedef typename vector<E>::iterator edge_iterator;
 
+        int size() { return graphs->size();}
         graph_iterator graph_begin() {return graphs->begin();}
         graph_iterator graph_end() {return graphs->end();}
         edge_iterator edge_begin() {return cross_edges.begin();}
         edge_iterator edge_end() {return cross_edges.end();}
 };
 
+template<class V, class E>
+Graph<V,E>& Graph<V,E>::ComponentGraph::getGraphForComponentId(int i) {
+    if (i >= graphs->size()) {
+        cerr << "Out of bound Size: " << graphs->size() << " Idx: " << i;
+        exit(-1);
+    }
+
+    return graphs->at(i);
+}
 
 template<class V, class E>
 void Graph<V,E>::ComponentGraph::addEdge(const E edge) {
-    cross_edges.push_back(edge);
+    cross_edges.push_back(Edge(edge));
 }
 
 template<class V, class E>
@@ -234,9 +247,11 @@ Graph<V,E>::Graph() :
 template<class V, class E>
 void Graph<V,E>::insertNode(V& node) {
     if (id_idx_mp.find(node.getId()) == id_idx_mp.end()) {
-        node.setAdjecencyIndex(getNodeCount());
-        nodes.push_back(node);
-        id_idx_mp.insert(std::pair<int, int>(node.getId(), node.getAdjecencyIndex()));
+        V node1(node);
+        node1.reset(V::HARD_RESET);
+        node1.setAdjecencyIndex(getNodeCount());
+        nodes.push_back(node1);
+        id_idx_mp.insert(std::pair<int, int>(node1.getId(), node1.getAdjecencyIndex()));
     }
 }
 
@@ -793,15 +808,13 @@ void Graph<V,E>::transpose() {
 
 template<class V, class E>
 typename Graph<V,E>::ComponentGraph& Graph<V,E>::stronglyConnectedComponents() {
-
-    ComponentGraph* comp_graph = new ComponentGraph(10, isDirected(), isWeighted(), isLabelled());
-    queue<V*> q;
+    list<int> q;
     // top sort to run depth first search
     // and order entries according to exit time.
     topsort();
-
     // not calling reset because coz other field too might be populated
     for (iterator it = begin(); it != end(); it++) {
+
         it->setColor(V::WHITE);
         it->setComponentId(-1);
     }
@@ -811,42 +824,53 @@ typename Graph<V,E>::ComponentGraph& Graph<V,E>::stronglyConnectedComponents() {
     for (rit = nodes.rbegin(); rit != nodes.rend(); rit++) {
         if (rit->getColor() == V::WHITE) {
             depthFirstRoutine(*rit, components++);
-            q.push(&(*rit));
+            q.push_back(rit->getId());
         }
     }
+    ComponentGraph* comp_graph = new ComponentGraph(components, isDirected(), isWeighted(), isLabelled());
 
     // To revert back to original configuration
     transpose();
+
+
     // not calling reset because coz other field too might be populated
     for (iterator it = begin(); it != end(); it++) {
         it->setColor(V::WHITE);
     }
-    /*
-    while (!q.empty()){
-        V* nodeP = q.front();
-        q.pop();
-        int component_id = nodeP->getComponentId();
-        Graph<V,E>& graph = comp_graph->getGraphForComponentId(component_id);
 
-        E* edge = nodeP->getEdgeList();
+
+    while (!q.empty()){
+        int node_id = q.front();
+        q.pop_front();
+        V& node1 = getNodeById(node_id);
+        int component_id = node1.getComponentId();
+        Graph<V,E>& graph = comp_graph->getGraphForComponentId(component_id);
+        if (node1.getColor() == V::WHITE) {
+            graph.insertNode(node1);
+            node1.setColor(V::GRAY);
+        }
+
+        E* edge = node1.getEdgeList();
         while(edge != NULL) {
-            assert(nodeP->getId() == edge->getCurrentNodeId());
+            assert(node_id == edge->getCurrentNodeId());
 
             V& node2 = getNodeById(edge->getOtherNodeId());
             if (node2.getColor() == V::WHITE) {
-                node2.setColor(V::GRAY);
-                q.push(&node2);
-                graph.insertNode(node2);
+                q.push_back(node2.getId());
+                if (node2.getComponentId() == component_id) {
+                    graph.insertNode(node2);
+                    node2.setColor(V::GRAY);
+                }
             }
             if (component_id == node2.getComponentId()) {
-                graph.createEdge(*nodeP, node2, edge->getWeight());
+                graph.createEdge(node1, node2, edge->getWeight());
             } else {
                 comp_graph->addEdge(*edge);
             }
+            edge = edge->getNext();
         }
-        nodeP->setColor(V::BLACK);
+        node1.setColor(V::BLACK);
     }
-    */
     return *comp_graph;
 }
 #endif

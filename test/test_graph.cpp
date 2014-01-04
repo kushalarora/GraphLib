@@ -238,7 +238,7 @@ class TestGraph {
         void testStronglyConnectedComponent() {
 
             TGraph* g = new Graph< Node<int>, Edge >(true, true, true);
-            Node<int>* nodeArr[10];
+            Node<int>* nodeArr[7];
 
             for (int i = 0; i < 10; i++) {
                 nodeArr[i] = new Node<int>(i);
@@ -246,13 +246,16 @@ class TestGraph {
             }
 
 
-            g->createRandomGraph(10, 0.5, true, nodeArr);
+            g->createRandomGraph(7, 0.4, nodeArr);
             Graph< Node<int>, Edge >  g2 = *g;
-            g->printGraph();
-            cout << endl << endl;
             TGraph::ComponentGraph comp_graph =  g->stronglyConnectedComponents();
 
-            g->printGraph();
+            cout << "No of components: "<< comp_graph.size()<<endl<<endl;
+            int i = 0;
+            for (TGraph::ComponentGraph::graph_iterator it = comp_graph.graph_begin(); it != comp_graph.graph_end(); it++) {
+                cout << "component: " << i++<< endl;
+                it->printGraph();
+            }
             cout << endl;
             // doing this to take care of cross edges between strongly connected components.
             //g->transpose();

@@ -134,7 +134,7 @@ class Node {
         bool isInTree() const {return in_tree;}
 
         int getComponentId() const {return component_id;}
-        void setComponentId(int componenet_id) {this->component_id = component_id;}
+        void setComponentId(int component_id) {this->component_id = component_id;}
         friend ostream& operator <<(ostream& os, const Node& node);
         template<class V, class E> friend class Graph;
         friend class TestNode;
