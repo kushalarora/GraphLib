@@ -67,6 +67,8 @@ using namespace std;
 template<class V, class E=Edge>
 class GraphBase {
     public:
+        GraphBase(const GraphBase& graph);
+        ~GraphBase();
         class ComponentGraph;
         enum RESET {HARD_RESET, SOFT_RESET};
         void insertNode(V& val);
@@ -113,10 +115,8 @@ class GraphBase {
         bool operator ==(const GraphBase& graph);
         GraphBase& operator =(const GraphBase& graph);
 
-        ~GraphBase();
         ComponentGraph& stronglyConnectedComponents();
 
-        GraphBase(const GraphBase& graph);
     private:
         int nEdges;
         bool directed;

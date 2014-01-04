@@ -60,3 +60,29 @@ float getWeight();
 int getId();
 void printEdge();
 ```
+
+###Graph API
+1. Insert a node
+
+   To insert, first you need to create a node and pass it to `insertNode`.
+  
+  ```cpp
+     // inserting unlabelled node
+     Node<Data> node(Data); 
+     graph.insertNode(node);
+ 
+    // inserting labelled node
+     Node<Data> node1(Data, 'label');
+     graph.insertNode(node1);
+  ```
+
+2. Create an edge
+   
+   To create an edge you can to call `createEdge` function. The arguments are two nodes that are connected via edge and weight if needed.    
+   Notice that the edge will be directed if graph is directed.
+
+   ```cpp
+      graph.createEdge(node1, node2);
+      graph.createEdge(node1, node2, 10.9); // 10.9 is weight of the edge.	
+   ```
+ 
