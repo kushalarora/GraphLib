@@ -70,21 +70,18 @@ class GraphBase {
         class ComponentGraph;
         enum RESET {HARD_RESET, SOFT_RESET};
         void insertNode(V& val);
-        void createEdge(V& V1, V& V2);
-        void createEdge(V& V1, V& V2, float weight);
+        bool createEdge(V& V1, V& V2);
+        bool createEdge(V& V1, V& V2, float weight);
 
-        inline bool isWeighted() const {return weighted;}
         inline bool isDirected() const {return directed;}
-        inline bool isLabelled() const {return labelled;}
 
         virtual void printGraph() const;
 
         virtual void createRandomGraph(int nVertices, V** nodesArr);
-        virtual void createRandomGraph(int nVertices, V** nodesArr, bool connected);
-        virtual void createRandomGraph(int nVertices, float density, V** nodesArr);
-        virtual void createRandomGraph(int nVertices, float density, V** nodesArr, bool connected);
-        virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic, V** nodesArr);
-        virtual void createRandomGraph(int nVertices, float density, bool strictly_acyclic, V** nodesArr, bool connected);
+        virtual void createRandomGraph(int nVertices, V** nodesArr, float density);
+        virtual void createRandomGraph(int nVertices, V** nodesArr, float density, bool weighted);
+        virtual void createRandomGraph(int nVertices, V** nodesArr, float density, bool weighted, bool connected);
+        virtual void createRandomGraph(int nVertices, V** nodesArr, float density, bool weighted, bool connected, bool strictly_acyclic);
 
         int getNodeCount() const {return nodes.size();}
         int getEdgeCount() const {return (isDirected() ? nEdges : nEdges/2);}
@@ -123,8 +120,6 @@ class GraphBase {
     private:
         int nEdges;
         bool directed;
-        bool weighted;
-        bool labelled;
 
         // Set would have been a better data structure as then the comparison would have been on
         // all fields not just id
@@ -132,7 +127,6 @@ class GraphBase {
         // So using map instead.
         map<int, int> id_idx_mp;
         vector<V> nodes;
-        static bool compareExitTimeInc(const V& node1, const V& node2) { return node1.getExitTime() < node2.getExitTime();}
 
         typedef typename map<const int, int>::iterator mp_iterator;
         typedef typename map<const int, int>::const_iterator const_mp_iterator;
@@ -145,8 +139,9 @@ class GraphBase {
         virtual void processEdge(E* edge);
         virtual void processOnBlack(V& node);
         virtual void processOnGrey(V& node);
+        static bool compareExitTimeInc(const V& node1, const V& node2) { return node1.getExitTime() < node2.getExitTime();}
         GraphBase();
-        GraphBase(bool directed, bool weighted, bool labelled);
+        GraphBase(bool directed);
 };
 
 template<class V, class E>
@@ -169,8 +164,8 @@ class GraphBase<V,E>::ComponentGraph {
     public:
         void addEdge(const E edge);
         GraphBase& getGraphForComponentId(int i);
-        ComponentGraph(int component_count, bool is_directed, bool is_weighted, bool is_labelled) {
-            graphs = new vector< GraphBase<V,E> >(component_count, GraphBase<V,E>(is_directed, is_weighted, is_labelled));
+        ComponentGraph(int component_count, bool is_directed) {
+            graphs = new vector< GraphBase<V,E> >(component_count, GraphBase<V,E>(is_directed));
         }
         typedef typename vector<GraphBase>::iterator graph_iterator;
         typedef typename vector<E>::iterator edge_iterator;
@@ -228,18 +223,14 @@ void GraphBase<V,E>::processOnGrey(V& node) {
 }
 
 template<class V, class E>
-GraphBase<V,E>::GraphBase(bool dirctd, bool wghtd, bool lbled) :
+GraphBase<V,E>::GraphBase(bool dirctd) :
     nEdges(0),
-    directed(dirctd),
-    weighted(wghtd),
-    labelled(lbled) {}
+    directed(dirctd) {}
 
 template<class V, class E>
 GraphBase<V,E>::GraphBase() :
     nEdges(0),
-    directed(false),
-    weighted(false),
-    labelled(false) {}
+    directed(false) {}
 
 
 template<class V, class E>
@@ -302,7 +293,7 @@ vector<E>& GraphBase<V,E>::getOutEdgesForNode(const V& node) const {
 }
 
 template<class V, class E>
-void GraphBase<V,E>::createEdge(V& V1, V& V2, float weight) {
+bool GraphBase<V,E>::createEdge(V& V1, V& V2, float weight) {
     V* tempArr[2] = {&V1, &V2};
     V* nodeArr[2] = {NULL, NULL};
     mp_iterator it;
@@ -331,8 +322,8 @@ void GraphBase<V,E>::createEdge(V& V1, V& V2, float weight) {
 
         while(temp != NULL) {
             // if V2 already present do nothing.
-            if (temp->getOtherNodeId() == nodeArr[1 - idx]->getId())
-                return;
+            if (temp->getOtherNodeId() == nodeArr[1 - idx]->getId() && temp->weight == weight)
+                return false;
             prevEdge = temp;
             temp = temp->getNext();
         }
@@ -349,11 +340,12 @@ void GraphBase<V,E>::createEdge(V& V1, V& V2, float weight) {
             currNode->incInDegree();
         nEdges++;
     }
+    return true;
 }
 
 template<class V, class E>
-void GraphBase<V,E>::createEdge(V& V1, V& V2) {
-    createEdge(V1, V2, 0);
+bool GraphBase<V,E>::createEdge(V& V1, V& V2) {
+    return createEdge(V1, V2, 0);
 }
 
 template<class V, class E>
@@ -374,12 +366,7 @@ void GraphBase<V,E>::printGraph() const {
 
 
 template<class V, class E>
-void GraphBase<V,E>::createRandomGraph(int nVertices, float density, bool strictly_acyclic, V**nodesArr) {
-    createRandomGraph(nVertices, density, strictly_acyclic, nodesArr, false);
-}
-
-template<class V, class E>
-void GraphBase<V,E>::createRandomGraph(int nVertices, float density, bool strictly_acyclic, V**nodesArr, bool connected) {
+void GraphBase<V,E>::createRandomGraph(int nVertices, V**nodesArr, float density, bool weighted, bool connected, bool strictly_acyclic) {
     srand(time(NULL));
     if (nVertices < 1)
         return;
@@ -401,7 +388,7 @@ void GraphBase<V,E>::createRandomGraph(int nVertices, float density, bool strict
             s.erase(s.begin());
             int idx = rand() % (s.size());
             V* node2 = s[idx];
-            createEdge(*node1, *node2, (isWeighted() ? rand() % 100 + 1: 0.0));
+            createEdge(*node1, *node2, (weighted ? rand() % 100 + 1: 0.0));
             connected_edges++;
         }
     }
@@ -420,29 +407,31 @@ void GraphBase<V,E>::createRandomGraph(int nVertices, float density, bool strict
         V& node2 = nodes.at(idx2);
 
         if (node1.getId() < node2.getId() || !strictly_acyclic)
-            createEdge(node1, node2, (isWeighted() ? rand() % 100  + 1: 0.0));
+            createEdge(node1, node2, (weighted ? rand() % 100  + 1: 0.0));
         else
-            createEdge(node2, node1, (isWeighted() ? rand() % 100  + 1: 0.0));
+            createEdge(node2, node1, (weighted ? rand() % 100  + 1: 0.0));
     }
 }
 
 template<class V, class E>
-void GraphBase<V,E>::createRandomGraph(int nVertices, float density, V**nodesArr, bool connected) {
-    createRandomGraph(nVertices, density, false, nodesArr, connected);
-}
-template<class V, class E>
-void GraphBase<V,E>::createRandomGraph(int nVertices, float density, V**nodesArr) {
-    createRandomGraph(nVertices, density, false, nodesArr, false);
+void GraphBase<V,E>::createRandomGraph(int nVertices, V**nodesArr, float density, bool weighted, bool connected) {
+    createRandomGraph(nVertices, nodesArr, density, weighted, connected, false);
 }
 
 template<class V, class E>
-void GraphBase<V,E>::createRandomGraph(int nVertices, V**nodesArr, bool connected) {
-    createRandomGraph(nVertices, 0.0, false, nodesArr, connected);
+void GraphBase<V,E>::createRandomGraph(int nVertices, V**nodesArr, float density, bool weighted) {
+    createRandomGraph(nVertices, nodesArr, density, weighted, false, false); // connected=false, strictly_acyclic=false
+}
+
+template<class V, class E>
+void GraphBase<V,E>::createRandomGraph(int nVertices, V**nodesArr, float density) {
+    createRandomGraph(nVertices, nodesArr, density, false, false, false); // weighted=false, connected=false, strictly_acyclic=false
 }
 
 template<class V, class E>
 void GraphBase<V,E>::createRandomGraph(int nVertices, V**nodesArr) {
-    createRandomGraph(nVertices, 0.0, false, nodesArr);
+    createRandomGraph(nVertices, nodesArr, 0, false, false, false); // density=0(take random value), weighted=false, connected=false, strictly_acyclic=false
+
 }
 
 
@@ -681,8 +670,6 @@ bool GraphBase<V, E>::operator ==(const GraphBase<V,E>& graph) {
 template<class V, class E>
 GraphBase<V,E>::GraphBase(const GraphBase<V,E>& graph) {
     directed = graph.isDirected();
-    weighted = graph.isWeighted();
-    labelled = graph.isLabelled();
     nEdges = 0;
     for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
          V node(*it);
@@ -715,8 +702,6 @@ GraphBase<V,E>::GraphBase(const GraphBase<V,E>& graph) {
 template<class V, class E>
 GraphBase<V,E>& GraphBase<V,E>::operator =(const GraphBase<V,E>& graph) {
     directed = graph.isDirected();
-    weighted = graph.isWeighted();
-    labelled = graph.isLabelled();
     nEdges = 0;
     for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
          V node(*it);
@@ -825,7 +810,7 @@ typename GraphBase<V,E>::ComponentGraph& GraphBase<V,E>::stronglyConnectedCompon
             q.push_back(rit->getId());
         }
     }
-    ComponentGraph* comp_graph = new ComponentGraph(components, isDirected(), isWeighted(), isLabelled());
+    ComponentGraph* comp_graph = new ComponentGraph(components, isDirected());
 
     // To revert back to original configuration
     transpose();
@@ -872,7 +857,7 @@ class Graph :public GraphBase<Node<T>, Edge> {
     public:
         Graph(): GraphBase<Node<T>, Edge>(){} ;
         Graph(const Graph<T>& graph):GraphBase<Node<T>, Edge>(graph) {};
-        Graph(bool directed, bool weighted, bool labelled):GraphBase<Node<T>, Edge>(directed, weighted, labelled){};
-        //friend class TestGraph;
+        Graph(bool directed):GraphBase<Node<T>, Edge>(directed){};
+        friend class TestGraph;
 };
 #endif

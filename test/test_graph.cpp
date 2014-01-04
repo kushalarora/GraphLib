@@ -25,8 +25,8 @@ class TBFSGraph : public GraphBase<TBFSNode, Edge > {
         node.setInTree(true);
     }
     public:
-        TBFSGraph(bool is_directed, bool is_weighted, bool is_labelled) :
-            GraphBase(is_directed, is_weighted, is_labelled) {};
+        TBFSGraph(bool is_directed) :
+            GraphBase(is_directed) {};
         TBFSGraph():GraphBase() {};
 };
 
@@ -42,19 +42,15 @@ class TestGraph {
         }
 
         void testEmpty() {
-            TGraph *g = new TGraph(true, true, true);
-            TGraph g1(true, true, true);
-            assert(g->isWeighted() == true);
+            TGraph *g = new TGraph(true);
+            TGraph g1(true);
             assert(g->isDirected() == true);
-            assert(g->isLabelled() == true);
 
             ASSERT(*g == g1, "Empty graphs should be equal");
 
             TGraph* g2 = new TGraph;
             TGraph g3;
-            assert(g2->isWeighted() == false);
             assert(g2->isDirected() == false);
-            assert(g2->isLabelled() == false);
 
             ASSERT(*g2 == g3, "Empty graphs should be equal");
             cout << "testEmpty Done!"<<endl;
@@ -110,7 +106,7 @@ class TestGraph {
             int val = 10, val1 = 20;
             Node<int> node3 = Node<int>(val);
             Node<int> node4 = Node<int>(val1);
-            TGraph* g = new TGraph(true, false, false);
+            TGraph* g = new TGraph(true);
             g->insertNode(node3);
             g->insertNode(node4);
             g->createEdge(node3, node4);
@@ -139,7 +135,7 @@ class TestGraph {
                 nodeArr[i]->populateNode(true);
 
             }
-            g->createRandomGraph(100, 0.8, nodeArr);
+            g->createRandomGraph(100, nodeArr, 0.8);
             TGraph  g2 = *g;
             g->reset(reset);
             if (reset == TGraph::HARD_RESET) {
@@ -163,13 +159,13 @@ class TestGraph {
             }
 
 
-            TGraph *g = new TGraph(true, true, true);
+            TGraph *g = new TGraph(true);
 
-            g->createRandomGraph(100, 0.5, true, nodeArr);
+            g->createRandomGraph(100, nodeArr);
             g->topsort();
             TGraph::iterator it;
             for (it = g->begin(); it != g->end() - 1; it++) {
-                //ASSERT(TGraph::compareExitTimeInc(*it, *(it + 1)), "Top sort should sort in inc order of exit time");
+                ASSERT(TGraph::compareExitTimeInc(*it, *(it + 1)), "Top sort should sort in inc order of exit time");
             }
 
             cout << "testTopsort Done!" << endl;
@@ -185,7 +181,7 @@ class TestGraph {
                 nodeArr[i]->populateNode(true);
             }
 
-            g.createRandomGraph(100, 0.5, true, nodeArr, true);
+            g.createRandomGraph(100, nodeArr, 0.5, true, true);
 
             g.BreadthFirstSearch(*nodeArr[0]);
             typename TBFSGraph::iterator it;
@@ -201,7 +197,7 @@ class TestGraph {
         }
 
         void testTransposeUndirected() {
-            TGraph* g = new TGraph(false, false, false);
+            TGraph* g = new TGraph(false);
 
             Node<int>* nodeArr[100];
 
@@ -210,7 +206,7 @@ class TestGraph {
                 nodeArr[i]->populateNode(true);
             }
 
-            g->createRandomGraph(100, 0.5, true, nodeArr);
+            g->createRandomGraph(100, nodeArr);
             TGraph g2 = *g;
             g->transpose();
             ASSERT(*g == g2, "Transpose should be same for undirected graph");
@@ -218,17 +214,16 @@ class TestGraph {
         }
 
         void testTransposeDirected() {
-            TGraph* g = new TGraph(true, true, true);
-            Node<int>* nodeArr[100];
+            TGraph* g = new TGraph(true);
+            Node<int>* nodeArr[6];
 
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 6; i++) {
                 nodeArr[i] = new Node<int>(i);
                 nodeArr[i]->populateNode(true);
             }
 
-            g->createRandomGraph(100, 0.5, true, nodeArr);
+            g->createRandomGraph(6, nodeArr, 0.6, true, true);
             TGraph  g2 = *g;
-
             g->transpose();
             g->transpose();
 
@@ -240,7 +235,7 @@ class TestGraph {
 
         void testStronglyConnectedComponent() {
 
-            TBFSGraph* g = new TBFSGraph(true, true, true);
+            TBFSGraph* g = new TBFSGraph(true);
             TBFSNode* nodeArr[100];
 
             for (int i = 0; i < 100; i++) {
@@ -248,7 +243,7 @@ class TestGraph {
                 nodeArr[i]->populateNode(true);
             }
 
-            g->createRandomGraph(100, 0.4, nodeArr);
+            g->createRandomGraph(100, nodeArr);
             TBFSGraph  g2 = *g;
             TBFSGraph::ComponentGraph comp_graph =  g->stronglyConnectedComponents();
 
@@ -288,7 +283,7 @@ int main() {
     test.testTransposeDirected();
     test.testReset(TestGraph::TGraph::HARD_RESET);
     test.testTopsort();
-    test.testStronglyConnectedComponent();
     test.testBFS();
+    test.testStronglyConnectedComponent();
     return 0;
 }
