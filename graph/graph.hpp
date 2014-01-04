@@ -95,8 +95,8 @@ class GraphBase {
 
         typedef typename vector<V>::iterator iterator;
         typedef typename vector<V>::const_iterator const_iterator;
-        const_iterator const_begin() const { return nodes.begin();}
-        const_iterator const_end() const { return nodes.end();}
+        const_iterator cbegin() const { return nodes.begin();}
+        const_iterator cend() const { return nodes.end();}
 
         iterator begin() { return nodes.begin();}
         iterator end() { return nodes.end();}
@@ -350,7 +350,7 @@ bool GraphBase<V,E>::createEdge(V& V1, V& V2) {
 
 template<class V, class E>
 void GraphBase<V,E>::printGraph() const {
-    for (const_iterator it = const_begin(); it != const_end(); it++) {
+    for (const_iterator it = cbegin(); it != cend(); it++) {
         it->printNode();
 
         E* tmp = it->getEdgeList();
@@ -638,7 +638,7 @@ bool GraphBase<V, E>::operator ==(const GraphBase<V,E>& graph) {
         return false;
     }
 
-    for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
+    for(const_iterator it = graph.cbegin(); it != graph.cend(); it++) {
 
         if (id_idx_mp.find(it->getId()) == id_idx_mp.end()) {
             return false;
@@ -671,7 +671,7 @@ template<class V, class E>
 GraphBase<V,E>::GraphBase(const GraphBase<V,E>& graph) {
     directed = graph.isDirected();
     nEdges = 0;
-    for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
+    for(const_iterator it = graph.cbegin(); it != graph.cend(); it++) {
          V node(*it);
          // Copy constructor copies everything
          // All you need in new graph is user inputted data and id
@@ -687,7 +687,7 @@ GraphBase<V,E>::GraphBase(const GraphBase<V,E>& graph) {
     assert(graph.getNodeCount() == getNodeCount());
 
     // Copying edges
-    for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
+    for(const_iterator it = graph.cbegin(); it != graph.cend(); it++) {
         E* tmp = it->getEdgeList();
         while(tmp != NULL) {
             createEdge( getNodeById(tmp->getCurrentNodeId()),
@@ -703,7 +703,7 @@ template<class V, class E>
 GraphBase<V,E>& GraphBase<V,E>::operator =(const GraphBase<V,E>& graph) {
     directed = graph.isDirected();
     nEdges = 0;
-    for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
+    for(const_iterator it = graph.cbegin(); it != graph.cend(); it++) {
          V node(*it);
          node.reset(V::HARD_RESET);
          insertNode(node);
