@@ -65,7 +65,7 @@ class Node {
 
         int adj_index;
 
-        Edge<T>* edge_list;     // linked list of edges.
+        Edge* edge_list;     // linked list of edges.
         int out_deg;
         int in_deg;
 
@@ -93,8 +93,8 @@ class Node {
 
         static string createRandomLabels(int nVertices);
 
-        Edge<T>* getEdgeList() const {return edge_list;}
-        void setEdgeList(Edge<T>* edge) {edge_list = edge;}
+        Edge* getEdgeList() const {return edge_list;}
+        void setEdgeList(Edge* edge) {edge_list = edge;}
 
         int getAdjecencyIndex() const {return adj_index;}
         void setAdjecencyIndex(int index) {adj_index = index;}

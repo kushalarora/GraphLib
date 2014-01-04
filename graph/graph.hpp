@@ -101,7 +101,7 @@ class Graph {
         iterator begin()  { return nodes.begin();}
         iterator end()  { return nodes.end();}
 
-        bool containsNode(const V& node) { return edgeNode.find(node.getId()) != edgeNode.end();}
+        bool containsNode(const V& node) { return id_idx_mp.find(node.getId()) != id_idx_mp.end();}
         vector<E>& getOutEdgesForNode(V& node);
         int getInDegreeForNode(const V& node);
         int getOutDegreeForNode(const V& node);
@@ -123,12 +123,13 @@ class Graph {
         // all fields not just id
         // But the problem is that set returns const reference while dereferencing iterator
         // So using map instead.
-        map<int, int> edgeNode;
+        map<int, int> id_idx_mp;
         vector<V> nodes;
         static bool compareExitTimeInc(const V& node1, const V& node2) { return node1.getExitTime() < node2.getExitTime();}
         static bool compareExitTimeDec(V& node1, V& node2) { return node1.getExitTime() > node2.getExitTime();}
         typedef typename map<int, int>::iterator mp_iterator;
         friend class TestGraph;
+        V& getNodeById(int id);
     protected:
         virtual void deleteEdge(E* edge);
         void depthFirstRoutine(V& node);
@@ -137,15 +138,26 @@ class Graph {
         virtual void processOnBlack(V& node);
         virtual void processOnGrey(V& node);
 
+
 };
+
+template<class V, class E>
+V& Graph<V,E>::getNodeById(int id) {
+    mp_iterator it;
+    if ((it = id_idx_mp.find(id)) == id_idx_mp.end()) {
+        cerr << "Node not found";
+        exit(-1);
+    }
+    return nodes[it->second];
+}
 
 template<class V, class E>
 void Graph<V,E>::processEdge(E* edge) {
 #ifdef DEBUG
     cout << "Processed Edge";
-    (edge->getCurrentNode()).printNode();
+    getNodeById(edge->getCurrentNodeId()).printNode();
     edge->printEdge();
-    (edge->getOtherNode()).printNode();
+    getNodeById(edge->getOtherNodeId()).printNode();
     cout << "\n";
     cout << "Edge turned " << edge->getType() << endl;
 #endif
@@ -186,40 +198,46 @@ Graph<V,E>::Graph() :
 
 template<class V, class E>
 void Graph<V,E>::insertNode(V& node) {
-    if (edgeNode.find(node.getId()) == edgeNode.end()) {
+    if (id_idx_mp.find(node.getId()) == id_idx_mp.end()) {
         node.setAdjecencyIndex(getNodeCount());
         nodes.push_back(node);
-        edgeNode.insert(std::pair<int, int>(node.getId(), node.getAdjecencyIndex()));
+        id_idx_mp.insert(std::pair<int, int>(node.getId(), node.getAdjecencyIndex()));
     }
 }
 
+// Not using getNodeById because we dont want to exit.
+// Just returning error.
 template<class V, class E>
 int Graph<V,E>::getInDegreeForNode(const V& node) {
-    mp_iterator it = edgeNode.find(node.getId());
-    if (it == edgeNode.end()) {
+    mp_iterator it = id_idx_mp.find(node.getId());
+    if (it == id_idx_mp.end()) {
         cerr << "Node not found";
         return -1;
     }
     return nodes[(it->second)].getInDegree();
 }
 
+// Not using getNodeById because we dont want to exit.
+// Just returning error.
 template<class V, class E>
 int Graph<V,E>::getOutDegreeForNode(const V& node) {
-    mp_iterator it = edgeNode.find(node.getId());
-    if (it == edgeNode.end()) {
+    mp_iterator it = id_idx_mp.find(node.getId());
+    if (it == id_idx_mp.end()) {
         cerr << "Node not found";
         return -1;
     }
     return nodes[(it->second)].getOutDegree();
 }
 
+// Not using getNodeById because we dont want to exit.
+// Just returning empty vector.
 template<class V, class E>
 vector<E>& Graph<V,E>::getOutEdgesForNode(V& node) {
     vector<E>* edges = new vector<E>();
 
     mp_iterator it;
     V* internal_node = NULL;
-    if ((it = edgeNode.find(node.getId())) != edgeNode.end()) {
+    if ((it = id_idx_mp.find(node.getId())) != id_idx_mp.end()) {
         internal_node = &nodes[it->second];
     }
 
@@ -241,7 +259,7 @@ void Graph<V,E>::createEdge(V& V1, V& V2, float weight) {
     V* nodeArr[2] = {NULL, NULL};
     mp_iterator it;
     for (int i = 0; i < 2; i++) {
-        nodeArr[i] = &nodes[edgeNode.at(tempArr[i]->getId())];
+        nodeArr[i] = &getNodeById(tempArr[i]->getId());
         assert(nodeArr[i]->getAdjecencyIndex() != -1);
     }
 
@@ -253,7 +271,10 @@ void Graph<V,E>::createEdge(V& V1, V& V2, float weight) {
     for (i = 0; i < (isDirected() ? 1: 2); i++, idx = 1 - idx) {
         V* currNode = nodeArr[idx];
         V* othrNode = nodeArr[1 - idx];
-        newEdge = new E(*currNode, *othrNode, isDirected(), weight);
+        newEdge = new E(currNode->getId(),
+                        othrNode->getId(),
+                        isDirected(),
+                        weight);
         newEdge->setId(id);
 
         // inserting edge to v2 in v1
@@ -262,7 +283,7 @@ void Graph<V,E>::createEdge(V& V1, V& V2, float weight) {
 
         while(temp != NULL) {
             // if V2 already present do nothing.
-            if (((V&)temp->getOtherNode()) == *nodeArr[1 - idx])
+            if (temp->getOtherNodeId() == nodeArr[1 - idx]->getId())
                 return;
             prevEdge = temp;
             temp = temp->getNext();
@@ -294,9 +315,9 @@ void Graph<V,E>::printGraph() {
 
         E* tmp = it->getEdgeList();
         while (tmp != NULL) {
-            assert(((V&)tmp->getCurrentNode()) == *it);
+            assert(tmp->getCurrentNodeId() == it->getId());
             tmp->printEdge();
-            (tmp->getOtherNode()).printNode();
+            getNodeById(tmp->getOtherNodeId()).printNode();
             tmp = tmp->getNext();
         }
         cout<<"\n"<<"\n";
@@ -410,20 +431,20 @@ void Graph<V,E>::hardResetGraph() {
         it->reset(V::HARD_RESET);
     }
     nEdges = 0;
-    edgeNode.clear();
+    id_idx_mp.clear();
     nodes.clear();
 }
 
 template<class V, class E>
 void Graph<V,E>::BreadthFirstSearch(V& source) {
 
-    if (edgeNode.find(source.getId()) == edgeNode.end()) {
+    if (id_idx_mp.find(source.getId()) == id_idx_mp.end()) {
         cerr << "Node not present" << endl;
         return;
     }
 
     // Get the internal corresponding node and run that.
-    source = nodes[edgeNode.at(source.getId())];
+    source = getNodeById(source.getId());
 
     queue<V*> q;
     source.setColor(V::GRAY);
@@ -440,8 +461,8 @@ void Graph<V,E>::BreadthFirstSearch(V& source) {
         assert(node != NULL);
         edge = node->getEdgeList();
         while(edge != NULL) {
-            assert(((V&)edge->getCurrentNode()) == *node);
-            other = (V*)&(edge->getOtherNode());
+            assert(edge->getCurrentNodeId() == node->getId());
+            other = (V*)&(getNodeById(edge->getOtherNodeId()));
             clr = other->getColor();
             if (clr == V::WHITE) {
                 other->setColor(V::GRAY);
@@ -460,8 +481,7 @@ void Graph<V,E>::BreadthFirstSearch(V& source) {
 template<class V, class E>
 void Graph<V,E>::depthFirstRoutine(V& node) {
     static int count = 0;
-    E* edge_list = node.getEdgeList();
-    E* edge = edge_list;
+    E* edge = node.getEdgeList();
     V* other;
     static map<int, E*> edge_mp;
     node.setEntryTime(count++);
@@ -471,7 +491,7 @@ void Graph<V,E>::depthFirstRoutine(V& node) {
         int edge_id = edge->getId();
         typename map<int, E*>::iterator it = edge_mp.find(edge_id);
 
-        other = (V*)(&edge->getOtherNode());
+        other = (V*)(&getNodeById(edge->getOtherNodeId()));
         typename V::COLOR clr = other->getColor();
 
         if (it == edge_mp.end()) {
@@ -554,11 +574,11 @@ void Graph<V,E>::topsort() {
 
     // Indexes have changed so reset edge map
     // and reset adj values.
-    edgeNode.clear();
+    id_idx_mp.clear();
     int i = 0;
     for (iterator it = begin(); it != end(); it++) {
         it->setAdjecencyIndex(i++);
-        edgeNode[it->getId()] = it->getAdjecencyIndex();
+        id_idx_mp[it->getId()] = it->getAdjecencyIndex();
     }
 
 #ifdef DEBUG
@@ -582,11 +602,11 @@ bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
 
     for(iterator it = graph.begin(); it != graph.end(); it++) {
 
-        if (edgeNode.find(it->getId()) == edgeNode.end()) {
+        if (id_idx_mp.find(it->getId()) == id_idx_mp.end()) {
             return false;
         }
 
-        V& node = nodes[edgeNode.at(it->getId())];
+        V& node = getNodeById(it->getId());
 
         E* tmp1 = node.getEdgeList();
         E* tmp2 = it->getEdgeList();
@@ -634,8 +654,8 @@ Graph<V,E>::Graph(Graph<V,E>& graph) {
     for(iterator it = graph.begin(); it != graph.end(); it++) {
         E* tmp = it->getEdgeList();
         while(tmp != NULL) {
-            createEdge( nodes[edgeNode.at((tmp->getCurrentNode()).getId())],
-                        nodes[edgeNode.at((tmp->getOtherNode()).getId())],
+            createEdge( getNodeById(tmp->getCurrentNodeId()),
+                        getNodeById(tmp->getOtherNodeId()),
                         tmp->getWeight());
             tmp = tmp->getNext();
         }
@@ -659,8 +679,8 @@ Graph<V,E>& Graph<V,E>::operator =(Graph<V,E>& graph) {
     for(iterator it = graph.begin(); it != graph.end(); it++) {
         E* tmp = it->getEdgeList();
         while(tmp != NULL) {
-            createEdge( nodes[edgeNode.at((tmp->getCurrentNode()).getId())],
-                        nodes[edgeNode.at((tmp->getOtherNode()).getId())],
+            createEdge( getNodeById(tmp->getCurrentNodeId()),
+                        getNodeById(tmp->getOtherNodeId()),
                         tmp->getWeight());
             tmp = tmp->getNext();
         }
@@ -670,8 +690,8 @@ Graph<V,E>& Graph<V,E>::operator =(Graph<V,E>& graph) {
 
 template<class V, class E>
 void Graph<V,E>::deleteEdge(E* edge) {
-    V& currNode = (V&)edge->getCurrentNode();
-    V& otherNode = (V&)edge->getOtherNode();
+    V& currNode = (V&)getNodeById(edge->getCurrentNodeId());
+    V& otherNode = (V&)getNodeById(edge->getOtherNodeId());
     E* edge_list = currNode.getEdgeList();
     if (edge == edge_list) {
         currNode.setEdgeList(edge->getNext());
@@ -713,8 +733,8 @@ void Graph<V,E>::transpose() {
             E* tmp = it->getEdgeList();
 
             while(tmp != NULL) {
-                V& node1 = (V&)tmp->getCurrentNode();
-                V& node2 = (V&)tmp->getOtherNode();
+                V& node1 = (V&)getNodeById(tmp->getCurrentNodeId());
+                V& node2 = (V&)getNodeById(tmp->getOtherNodeId());
                 float weight = tmp->getWeight();
                 if (tmp->getId() <= largest_edge_id) {
                     E* tmp2 = tmp->getNext();
