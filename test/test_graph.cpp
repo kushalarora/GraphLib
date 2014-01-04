@@ -20,19 +20,19 @@ class TBFSNode : public Node<int> {
 
 
 
-class TBFSGraph : public Graph<TBFSNode, Edge > {
+class TBFSGraph : public GraphInterface<TBFSNode, Edge > {
     virtual void processOnGrey(TBFSNode& node) {
         node.setInTree(true);
     }
     public:
         TBFSGraph(bool is_directed, bool is_weighted, bool is_labelled) :
-            Graph(is_directed, is_weighted, is_labelled) {};
-        TBFSGraph():Graph() {};
+            GraphInterface(is_directed, is_weighted, is_labelled) {};
+        TBFSGraph():GraphInterface() {};
 };
 
 class TestGraph {
     public:
-        typedef Graph< Node<int>, Edge > TGraph;
+        typedef Graph<int> TGraph;
         typedef TGraph::RESET RESET;
     public:
         int MAX_TRIES;
@@ -42,7 +42,7 @@ class TestGraph {
         }
 
         void testEmpty() {
-            TGraph *g = new Graph< Node<int>, Edge >(true, true, true);
+            TGraph *g = new TGraph(true, true, true);
             TGraph g1(true, true, true);
             assert(g->isWeighted() == true);
             assert(g->isDirected() == true);
@@ -50,7 +50,7 @@ class TestGraph {
 
             ASSERT(*g == g1, "Empty graphs should be equal");
 
-            TGraph* g2 = new Graph < Node<int>, Edge >();
+            TGraph* g2 = new TGraph;
             TGraph g3;
             assert(g2->isWeighted() == false);
             assert(g2->isDirected() == false);
@@ -68,7 +68,7 @@ class TestGraph {
                 nodeArr.push_back(node);
             }
 
-            TGraph *g = new Graph < Node<int>, Edge >();
+            TGraph *g = new TGraph;
             for (int i = 0; i < nodeArr.size(); i++) {
                 g->insertNode(nodeArr.at(i));
             }
@@ -86,7 +86,7 @@ class TestGraph {
             Node<int> node1 = Node<int>(val);
             Node<int> node2 = Node<int>(val1);
 
-            TGraph* g = new Graph < Node<int>, Edge >();
+            TGraph* g = new TGraph;
 
             g->insertNode(node1);
             g->insertNode(node2);
@@ -110,7 +110,7 @@ class TestGraph {
             int val = 10, val1 = 20;
             Node<int> node3 = Node<int>(val);
             Node<int> node4 = Node<int>(val1);
-            TGraph* g = new Graph< Node<int>, Edge >(true, false, false);
+            TGraph* g = new TGraph(true, false, false);
             g->insertNode(node3);
             g->insertNode(node4);
             g->createEdge(node3, node4);
@@ -140,7 +140,7 @@ class TestGraph {
 
             }
             g->createRandomGraph(100, 0.8, nodeArr);
-            Graph< Node<int>, Edge >  g2 = *g;
+            TGraph  g2 = *g;
             g->reset(reset);
             if (reset == TGraph::HARD_RESET) {
                 ASSERT(g->getNodeCount() == 0, "There should be no vertices");
@@ -163,7 +163,7 @@ class TestGraph {
             }
 
 
-            TGraph *g = new Graph < Node<int>, Edge >(true, true, true);
+            TGraph *g = new TGraph(true, true, true);
 
             g->createRandomGraph(100, 0.5, true, nodeArr);
             g->topsort();
@@ -201,7 +201,7 @@ class TestGraph {
         }
 
         void testTransposeUndirected() {
-            TGraph* g = new Graph< Node<int>, Edge >(false, false, false);
+            TGraph* g = new TGraph(false, false, false);
 
             Node<int>* nodeArr[100];
 
@@ -211,14 +211,14 @@ class TestGraph {
             }
 
             g->createRandomGraph(100, 0.5, true, nodeArr);
-            Graph< Node<int>, Edge >  g2 = *g;
+            TGraph g2 = *g;
             g->transpose();
             ASSERT(*g == g2, "Transpose should be same for undirected graph");
             std::cout << "testTransposeUndirected Done!"<<endl;
         }
 
         void testTransposeDirected() {
-            TGraph* g = new Graph< Node<int>, Edge >(true, true, true);
+            TGraph* g = new TGraph(true, true, true);
             Node<int>* nodeArr[100];
 
             for (int i = 0; i < 100; i++) {
@@ -227,7 +227,7 @@ class TestGraph {
             }
 
             g->createRandomGraph(100, 0.5, true, nodeArr);
-            Graph< Node<int>, Edge >  g2 = *g;
+            TGraph  g2 = *g;
 
             g->transpose();
             g->transpose();
@@ -284,11 +284,11 @@ int main() {
     test.testInsertNode();
     test.testCreateUndirectedEdge();
     test.testCreateDirectedEdge();
-    test.testBFS();
     test.testTransposeUndirected();
     test.testTransposeDirected();
     test.testReset(TestGraph::TGraph::HARD_RESET);
     test.testTopsort();
     test.testStronglyConnectedComponent();
+    test.testBFS();
     return 0;
 }
