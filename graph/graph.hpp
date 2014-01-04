@@ -65,7 +65,7 @@ using namespace std;
 #define __GRAPH__
 
 template<class V, class E=Edge>
-class GraphInterface {
+class GraphBase {
     public:
         class ComponentGraph;
         enum RESET {HARD_RESET, SOFT_RESET};
@@ -113,13 +113,13 @@ class GraphInterface {
         void BreadthFirstSearch(V& source);
         void depthFirstSearch();
 
-        bool operator ==(const GraphInterface& graph);
-        GraphInterface& operator =(const GraphInterface& graph);
+        bool operator ==(const GraphBase& graph);
+        GraphBase& operator =(const GraphBase& graph);
 
-        ~GraphInterface();
+        ~GraphBase();
         ComponentGraph& stronglyConnectedComponents();
 
-        GraphInterface(const GraphInterface& graph);
+        GraphBase(const GraphBase& graph);
     private:
         int nEdges;
         bool directed;
@@ -145,12 +145,12 @@ class GraphInterface {
         virtual void processEdge(E* edge);
         virtual void processOnBlack(V& node);
         virtual void processOnGrey(V& node);
-        GraphInterface();
-        GraphInterface(bool directed, bool weighted, bool labelled);
+        GraphBase();
+        GraphBase(bool directed, bool weighted, bool labelled);
 };
 
 template<class V, class E>
-V& GraphInterface<V,E>::getNodeById(int id) {
+V& GraphBase<V,E>::getNodeById(int id) {
     mp_iterator it;
     if ((it = id_idx_mp.find(id)) == id_idx_mp.end()) {
         cout << id_idx_mp.size() << endl;
@@ -160,19 +160,19 @@ V& GraphInterface<V,E>::getNodeById(int id) {
     return nodes[it->second];
 }
 template<class V, class E>
-class GraphInterface<V,E>::ComponentGraph {
+class GraphBase<V,E>::ComponentGraph {
     private:
-        vector< GraphInterface<V,E> >* graphs;
+        vector< GraphBase<V,E> >* graphs;
         vector<E>cross_edges;
 
 
     public:
         void addEdge(const E edge);
-        GraphInterface& getGraphForComponentId(int i);
+        GraphBase& getGraphForComponentId(int i);
         ComponentGraph(int component_count, bool is_directed, bool is_weighted, bool is_labelled) {
-            graphs = new vector< GraphInterface<V,E> >(component_count, GraphInterface<V,E>(is_directed, is_weighted, is_labelled));
+            graphs = new vector< GraphBase<V,E> >(component_count, GraphBase<V,E>(is_directed, is_weighted, is_labelled));
         }
-        typedef typename vector<GraphInterface>::iterator graph_iterator;
+        typedef typename vector<GraphBase>::iterator graph_iterator;
         typedef typename vector<E>::iterator edge_iterator;
 
         int size() { return graphs->size();}
@@ -183,7 +183,7 @@ class GraphInterface<V,E>::ComponentGraph {
 };
 
 template<class V, class E>
-GraphInterface<V,E>& GraphInterface<V,E>::ComponentGraph::getGraphForComponentId(int i) {
+GraphBase<V,E>& GraphBase<V,E>::ComponentGraph::getGraphForComponentId(int i) {
     if (i >= graphs->size()) {
         cerr << "Out of bound Size: " << graphs->size() << " Idx: " << i;
         exit(-1);
@@ -193,12 +193,12 @@ GraphInterface<V,E>& GraphInterface<V,E>::ComponentGraph::getGraphForComponentId
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::ComponentGraph::addEdge(const E edge) {
+void GraphBase<V,E>::ComponentGraph::addEdge(const E edge) {
     cross_edges.push_back(Edge(edge));
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::processEdge(E* edge) {
+void GraphBase<V,E>::processEdge(E* edge) {
 #ifdef DEBUG
     cout << "Processed Edge";
     getNodeById(edge->getCurrentNodeId()).printNode();
@@ -210,7 +210,7 @@ void GraphInterface<V,E>::processEdge(E* edge) {
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::processOnBlack(V& node) {
+void GraphBase<V,E>::processOnBlack(V& node) {
 #ifdef DEBUG
     cout << "Node Turned Black ";
     node.printNode();
@@ -219,7 +219,7 @@ void GraphInterface<V,E>::processOnBlack(V& node) {
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::processOnGrey(V& node) {
+void GraphBase<V,E>::processOnGrey(V& node) {
 #ifdef DEBUG
     cout << "Node turned Grey ";
     node.printNode();
@@ -228,14 +228,14 @@ void GraphInterface<V,E>::processOnGrey(V& node) {
 }
 
 template<class V, class E>
-GraphInterface<V,E>::GraphInterface(bool dirctd, bool wghtd, bool lbled) :
+GraphBase<V,E>::GraphBase(bool dirctd, bool wghtd, bool lbled) :
     nEdges(0),
     directed(dirctd),
     weighted(wghtd),
     labelled(lbled) {}
 
 template<class V, class E>
-GraphInterface<V,E>::GraphInterface() :
+GraphBase<V,E>::GraphBase() :
     nEdges(0),
     directed(false),
     weighted(false),
@@ -243,7 +243,7 @@ GraphInterface<V,E>::GraphInterface() :
 
 
 template<class V, class E>
-void GraphInterface<V,E>::insertNode(V& node) {
+void GraphBase<V,E>::insertNode(V& node) {
     if (id_idx_mp.find(node.getId()) == id_idx_mp.end()) {
         V node1(node);
         node1.reset(V::HARD_RESET);
@@ -256,7 +256,7 @@ void GraphInterface<V,E>::insertNode(V& node) {
 // Not using getNodeById because we dont want to exit.
 // Just returning error.
 template<class V, class E>
-int GraphInterface<V,E>::getInDegreeForNode(const V& node) const {
+int GraphBase<V,E>::getInDegreeForNode(const V& node) const {
     const_mp_iterator it = id_idx_mp.find(node.getId());
     if (it == id_idx_mp.end()) {
         cerr << "Node not found";
@@ -268,7 +268,7 @@ int GraphInterface<V,E>::getInDegreeForNode(const V& node) const {
 // Not using getNodeById because we dont want to exit.
 // Just returning error.
 template<class V, class E>
-int GraphInterface<V,E>::getOutDegreeForNode(const V& node) const {
+int GraphBase<V,E>::getOutDegreeForNode(const V& node) const {
     const_mp_iterator it = id_idx_mp.find(node.getId());
     if (it == id_idx_mp.end()) {
         cerr << "Node not found";
@@ -280,7 +280,7 @@ int GraphInterface<V,E>::getOutDegreeForNode(const V& node) const {
 // Not using getNodeById because we dont want to exit.
 // Just returning empty vector.
 template<class V, class E>
-vector<E>& GraphInterface<V,E>::getOutEdgesForNode(const V& node) const {
+vector<E>& GraphBase<V,E>::getOutEdgesForNode(const V& node) const {
     vector<E>* edges = new vector<E>();
 
     const_mp_iterator it;
@@ -302,7 +302,7 @@ vector<E>& GraphInterface<V,E>::getOutEdgesForNode(const V& node) const {
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::createEdge(V& V1, V& V2, float weight) {
+void GraphBase<V,E>::createEdge(V& V1, V& V2, float weight) {
     V* tempArr[2] = {&V1, &V2};
     V* nodeArr[2] = {NULL, NULL};
     mp_iterator it;
@@ -352,12 +352,12 @@ void GraphInterface<V,E>::createEdge(V& V1, V& V2, float weight) {
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::createEdge(V& V1, V& V2) {
+void GraphBase<V,E>::createEdge(V& V1, V& V2) {
     createEdge(V1, V2, 0);
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::printGraph() const {
+void GraphBase<V,E>::printGraph() const {
     for (const_iterator it = const_begin(); it != const_end(); it++) {
         it->printNode();
 
@@ -374,12 +374,12 @@ void GraphInterface<V,E>::printGraph() const {
 
 
 template<class V, class E>
-void GraphInterface<V,E>::createRandomGraph(int nVertices, float density, bool strictly_acyclic, V**nodesArr) {
+void GraphBase<V,E>::createRandomGraph(int nVertices, float density, bool strictly_acyclic, V**nodesArr) {
     createRandomGraph(nVertices, density, strictly_acyclic, nodesArr, false);
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::createRandomGraph(int nVertices, float density, bool strictly_acyclic, V**nodesArr, bool connected) {
+void GraphBase<V,E>::createRandomGraph(int nVertices, float density, bool strictly_acyclic, V**nodesArr, bool connected) {
     srand(time(NULL));
     if (nVertices < 1)
         return;
@@ -427,32 +427,32 @@ void GraphInterface<V,E>::createRandomGraph(int nVertices, float density, bool s
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::createRandomGraph(int nVertices, float density, V**nodesArr, bool connected) {
+void GraphBase<V,E>::createRandomGraph(int nVertices, float density, V**nodesArr, bool connected) {
     createRandomGraph(nVertices, density, false, nodesArr, connected);
 }
 template<class V, class E>
-void GraphInterface<V,E>::createRandomGraph(int nVertices, float density, V**nodesArr) {
+void GraphBase<V,E>::createRandomGraph(int nVertices, float density, V**nodesArr) {
     createRandomGraph(nVertices, density, false, nodesArr, false);
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::createRandomGraph(int nVertices, V**nodesArr, bool connected) {
+void GraphBase<V,E>::createRandomGraph(int nVertices, V**nodesArr, bool connected) {
     createRandomGraph(nVertices, 0.0, false, nodesArr, connected);
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::createRandomGraph(int nVertices, V**nodesArr) {
+void GraphBase<V,E>::createRandomGraph(int nVertices, V**nodesArr) {
     createRandomGraph(nVertices, 0.0, false, nodesArr);
 }
 
 
 template<class V, class E>
-void GraphInterface<V,E>::reset() {
+void GraphBase<V,E>::reset() {
     reset(SOFT_RESET);
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::reset(RESET reset) {
+void GraphBase<V,E>::reset(RESET reset) {
     if( reset == HARD_RESET) {
        hardResetGraph();
     } else {
@@ -462,12 +462,12 @@ void GraphInterface<V,E>::reset(RESET reset) {
 }
 
 template<class V, class E>
-GraphInterface<V,E>::~GraphInterface() {
+GraphBase<V,E>::~GraphBase() {
     hardResetGraph();
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::hardResetGraph() {
+void GraphBase<V,E>::hardResetGraph() {
     for (iterator it = begin(); it != end(); it++) {
         E* edge = it->getEdgeList();
         E* tmp = NULL;
@@ -484,7 +484,7 @@ void GraphInterface<V,E>::hardResetGraph() {
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::BreadthFirstSearch(V& source) {
+void GraphBase<V,E>::BreadthFirstSearch(V& source) {
 
     if (id_idx_mp.find(source.getId()) == id_idx_mp.end()) {
         cerr << "Node not present" << endl;
@@ -527,7 +527,7 @@ void GraphInterface<V,E>::BreadthFirstSearch(V& source) {
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::depthFirstRoutine(V& node, int component_id) {
+void GraphBase<V,E>::depthFirstRoutine(V& node, int component_id) {
     static int count = 0;
     E* edge = node.getEdgeList();
     V* other;
@@ -583,7 +583,7 @@ void GraphInterface<V,E>::depthFirstRoutine(V& node, int component_id) {
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::depthFirstSearch() {
+void GraphBase<V,E>::depthFirstSearch() {
     int component_id = 0;
     for (iterator it = begin(); it != end(); it++) {
         if (it->getColor() == V::WHITE)
@@ -592,7 +592,7 @@ void GraphInterface<V,E>::depthFirstSearch() {
 }
 
 template<class V, class E>
-bool GraphInterface<V,E>::isCyclic() {
+bool GraphBase<V,E>::isCyclic() {
     depthFirstSearch();
     for (iterator it = begin(); it != end(); it++) {
 
@@ -608,7 +608,7 @@ bool GraphInterface<V,E>::isCyclic() {
 
 
 template<class V, class E>
-void GraphInterface<V,E>::topsort() {
+void GraphBase<V,E>::topsort() {
 
     // Do depth first search to calculate exit Time.
     depthFirstSearch();
@@ -640,7 +640,7 @@ void GraphInterface<V,E>::topsort() {
 }
 
 template<class V, class E>
-bool GraphInterface<V, E>::operator ==(const GraphInterface<V,E>& graph) {
+bool GraphBase<V, E>::operator ==(const GraphBase<V,E>& graph) {
     if (getNodeCount() != graph.getNodeCount()) {
         return false;
     }
@@ -679,7 +679,7 @@ bool GraphInterface<V, E>::operator ==(const GraphInterface<V,E>& graph) {
 }
 
 template<class V, class E>
-GraphInterface<V,E>::GraphInterface(const GraphInterface<V,E>& graph) {
+GraphBase<V,E>::GraphBase(const GraphBase<V,E>& graph) {
     directed = graph.isDirected();
     weighted = graph.isWeighted();
     labelled = graph.isLabelled();
@@ -713,7 +713,7 @@ GraphInterface<V,E>::GraphInterface(const GraphInterface<V,E>& graph) {
 
 // Totally same as above.
 template<class V, class E>
-GraphInterface<V,E>& GraphInterface<V,E>::operator =(const GraphInterface<V,E>& graph) {
+GraphBase<V,E>& GraphBase<V,E>::operator =(const GraphBase<V,E>& graph) {
     directed = graph.isDirected();
     weighted = graph.isWeighted();
     labelled = graph.isLabelled();
@@ -738,7 +738,7 @@ GraphInterface<V,E>& GraphInterface<V,E>::operator =(const GraphInterface<V,E>& 
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::deleteEdge(E* edge) {
+void GraphBase<V,E>::deleteEdge(E* edge) {
     V& currNode = (V&)getNodeById(edge->getCurrentNodeId());
     V& otherNode = (V&)getNodeById(edge->getOtherNodeId());
     E* edge_list = currNode.getEdgeList();
@@ -768,7 +768,7 @@ void GraphInterface<V,E>::deleteEdge(E* edge) {
 }
 
 template<class V, class E>
-void GraphInterface<V,E>::transpose() {
+void GraphBase<V,E>::transpose() {
     if (isDirected()) {
         int largest_edge_id = -1;
         for (iterator it = begin(); it != end(); it++) {
@@ -805,7 +805,7 @@ void GraphInterface<V,E>::transpose() {
 }
 
 template<class V, class E>
-typename GraphInterface<V,E>::ComponentGraph& GraphInterface<V,E>::stronglyConnectedComponents() {
+typename GraphBase<V,E>::ComponentGraph& GraphBase<V,E>::stronglyConnectedComponents() {
     list<int> q;
     // top sort to run depth first search
     // and order entries according to exit time.
@@ -833,7 +833,7 @@ typename GraphInterface<V,E>::ComponentGraph& GraphInterface<V,E>::stronglyConne
 
     // not calling reset because coz other field too might be populated
     for (iterator it = begin(); it != end(); it++) {
-        GraphInterface& graph = comp_graph->getGraphForComponentId(it->getComponentId());
+        GraphBase& graph = comp_graph->getGraphForComponentId(it->getComponentId());
         graph.insertNode(*it);
         it->setColor(V::WHITE);
     }
@@ -844,7 +844,7 @@ typename GraphInterface<V,E>::ComponentGraph& GraphInterface<V,E>::stronglyConne
         q.pop_front();
         V& node1 = getNodeById(node_id);
         int component_id = node1.getComponentId();
-        GraphInterface<V,E>& graph = comp_graph->getGraphForComponentId(component_id);
+        GraphBase<V,E>& graph = comp_graph->getGraphForComponentId(component_id);
         node1.setColor(V::GRAY);
 
         E* edge = node1.getEdgeList();
@@ -868,11 +868,11 @@ typename GraphInterface<V,E>::ComponentGraph& GraphInterface<V,E>::stronglyConne
 }
 
 template<typename T>
-class Graph :public GraphInterface<Node<T>, Edge> {
+class Graph :public GraphBase<Node<T>, Edge> {
     public:
-        Graph(): GraphInterface<Node<T>, Edge>(){} ;
-        Graph(const Graph<T>& graph):GraphInterface<Node<T>, Edge>(graph) {};
-        Graph(bool directed, bool weighted, bool labelled):GraphInterface<Node<T>, Edge>(directed, weighted, labelled){};
+        Graph(): GraphBase<Node<T>, Edge>(){} ;
+        Graph(const Graph<T>& graph):GraphBase<Node<T>, Edge>(graph) {};
+        Graph(bool directed, bool weighted, bool labelled):GraphBase<Node<T>, Edge>(directed, weighted, labelled){};
         //friend class TestGraph;
 };
 #endif

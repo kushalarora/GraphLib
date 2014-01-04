@@ -4,7 +4,7 @@ using namespace std;
 #ifndef __EDGE__
 #define __EDGE__
 
-template<class V, class E> class GraphInterface;
+template<class V, class E> class GraphBase;
 
 /*
  * User cannot create an edge. At most it can do is get an edge
@@ -66,7 +66,7 @@ class Edge {
         // User have no business of reseting an edge
         virtual void reset();
 
-        template<class V, class E> friend class GraphInterface;
+        template<class V, class E> friend class GraphBase;
         friend class TestEdge;
 };
 

@@ -20,14 +20,14 @@ class TBFSNode : public Node<int> {
 
 
 
-class TBFSGraph : public GraphInterface<TBFSNode, Edge > {
+class TBFSGraph : public GraphBase<TBFSNode, Edge > {
     virtual void processOnGrey(TBFSNode& node) {
         node.setInTree(true);
     }
     public:
         TBFSGraph(bool is_directed, bool is_weighted, bool is_labelled) :
-            GraphInterface(is_directed, is_weighted, is_labelled) {};
-        TBFSGraph():GraphInterface() {};
+            GraphBase(is_directed, is_weighted, is_labelled) {};
+        TBFSGraph():GraphBase() {};
 };
 
 class TestGraph {

@@ -17,7 +17,7 @@ using namespace std;
  */
 
 
-template<class V, class E> class GraphInterface;
+template<class V, class E> class GraphBase;
 
 template<typename T>
 class Node {
@@ -136,7 +136,7 @@ class Node {
         int getComponentId() const {return component_id;}
         void setComponentId(int component_id) {this->component_id = component_id;}
         friend ostream& operator <<(ostream& os, const Node& node);
-        template<class V, class E> friend class GraphInterface;
+        template<class V, class E> friend class GraphBase;
         friend class TestNode;
 };
 
