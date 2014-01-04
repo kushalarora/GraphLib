@@ -65,9 +65,10 @@ using namespace std;
 template<class V, class E>
 class Graph {
     public:
+        class ComponentGraph;
         enum RESET {HARD_RESET, SOFT_RESET};
         Graph();
-        Graph(Graph& graph);
+        Graph(const Graph& graph);
         ~Graph();
         Graph(bool directed, bool weighted, bool labelled);
         void insertNode(V& val);
@@ -78,7 +79,7 @@ class Graph {
         inline bool isDirected() const {return directed;}
         inline bool isLabelled() const {return labelled;}
 
-        virtual void printGraph();
+        virtual void printGraph() const;
 
         virtual void createRandomGraph(int nVertices, V** nodesArr);
         virtual void createRandomGraph(int nVertices, V** nodesArr, bool connected);
@@ -98,21 +99,26 @@ class Graph {
         void transpose();
 
         typedef typename vector<V>::iterator iterator;
-        iterator begin()  { return nodes.begin();}
-        iterator end()  { return nodes.end();}
+        typedef typename vector<V>::const_iterator const_iterator;
+        const_iterator const_begin() const { return nodes.begin();}
+        const_iterator const_end() const { return nodes.end();}
+
+        iterator begin() { return nodes.begin();}
+        iterator end() { return nodes.end();}
 
         bool containsNode(const V& node) { return id_idx_mp.find(node.getId()) != id_idx_mp.end();}
-        vector<E>& getOutEdgesForNode(V& node);
-        int getInDegreeForNode(const V& node);
-        int getOutDegreeForNode(const V& node);
+        vector<E>& getOutEdgesForNode(const V& node) const;
+        int getInDegreeForNode(const V& node) const;
+        int getOutDegreeForNode(const V& node) const;
 
         // Traversal Specific functions
         void BreadthFirstSearch(V& source);
         void depthFirstSearch();
 
-        bool operator ==(Graph& graph);
-        Graph& operator =(Graph& graph);
+        bool operator ==(const Graph& graph);
+        Graph& operator =(const Graph& graph);
 
+        ComponentGraph& stronglyConnectedComponents();
     private:
         int nEdges;
         bool directed;
@@ -126,13 +132,15 @@ class Graph {
         map<int, int> id_idx_mp;
         vector<V> nodes;
         static bool compareExitTimeInc(const V& node1, const V& node2) { return node1.getExitTime() < node2.getExitTime();}
-        static bool compareExitTimeDec(V& node1, V& node2) { return node1.getExitTime() > node2.getExitTime();}
-        typedef typename map<int, int>::iterator mp_iterator;
+
+        typedef typename map<const int, int>::iterator mp_iterator;
+        typedef typename map<const int, int>::const_iterator const_mp_iterator;
+
         friend class TestGraph;
         V& getNodeById(int id);
     protected:
         virtual void deleteEdge(E* edge);
-        void depthFirstRoutine(V& node);
+        void depthFirstRoutine(V& node, int component_id);
         void hardResetGraph();
         virtual void processEdge(E* edge);
         virtual void processOnBlack(V& node);
@@ -149,6 +157,33 @@ V& Graph<V,E>::getNodeById(int id) {
         exit(-1);
     }
     return nodes[it->second];
+}
+template<class V, class E>
+class Graph<V,E>::ComponentGraph {
+    private:
+        vector< Graph<V,E> >* graphs;
+        vector<E>cross_edges;
+
+
+    public:
+        void addEdge(const E edge);
+        Graph& getGraphForComponentId(int i) {return graphs->at(i);}
+        ComponentGraph(int component_count, bool is_directed, bool is_weighted, bool is_labelled) {
+            graphs = new vector< Graph<V,E> >(component_count, Graph<V,E>(is_directed, is_weighted, is_labelled));
+        }
+        typedef typename vector<Graph>::iterator graph_iterator;
+        typedef typename vector<E>::iterator edge_iterator;
+
+        graph_iterator graph_begin() {return graphs->begin();}
+        graph_iterator graph_end() {return graphs->end();}
+        edge_iterator edge_begin() {return cross_edges.begin();}
+        edge_iterator edge_end() {return cross_edges.end();}
+};
+
+
+template<class V, class E>
+void Graph<V,E>::ComponentGraph::addEdge(const E edge) {
+    cross_edges.push_back(edge);
 }
 
 template<class V, class E>
@@ -208,8 +243,8 @@ void Graph<V,E>::insertNode(V& node) {
 // Not using getNodeById because we dont want to exit.
 // Just returning error.
 template<class V, class E>
-int Graph<V,E>::getInDegreeForNode(const V& node) {
-    mp_iterator it = id_idx_mp.find(node.getId());
+int Graph<V,E>::getInDegreeForNode(const V& node) const {
+    const_mp_iterator it = id_idx_mp.find(node.getId());
     if (it == id_idx_mp.end()) {
         cerr << "Node not found";
         return -1;
@@ -220,8 +255,8 @@ int Graph<V,E>::getInDegreeForNode(const V& node) {
 // Not using getNodeById because we dont want to exit.
 // Just returning error.
 template<class V, class E>
-int Graph<V,E>::getOutDegreeForNode(const V& node) {
-    mp_iterator it = id_idx_mp.find(node.getId());
+int Graph<V,E>::getOutDegreeForNode(const V& node) const {
+    const_mp_iterator it = id_idx_mp.find(node.getId());
     if (it == id_idx_mp.end()) {
         cerr << "Node not found";
         return -1;
@@ -232,11 +267,11 @@ int Graph<V,E>::getOutDegreeForNode(const V& node) {
 // Not using getNodeById because we dont want to exit.
 // Just returning empty vector.
 template<class V, class E>
-vector<E>& Graph<V,E>::getOutEdgesForNode(V& node) {
+vector<E>& Graph<V,E>::getOutEdgesForNode(const V& node) const {
     vector<E>* edges = new vector<E>();
 
-    mp_iterator it;
-    V* internal_node = NULL;
+    const_mp_iterator it;
+    const V* internal_node;
     if ((it = id_idx_mp.find(node.getId())) != id_idx_mp.end()) {
         internal_node = &nodes[it->second];
     }
@@ -309,15 +344,15 @@ void Graph<V,E>::createEdge(V& V1, V& V2) {
 }
 
 template<class V, class E>
-void Graph<V,E>::printGraph() {
-    for (iterator it = begin(); it != end(); it++) {
+void Graph<V,E>::printGraph() const {
+    for (const_iterator it = const_begin(); it != const_end(); it++) {
         it->printNode();
 
         E* tmp = it->getEdgeList();
         while (tmp != NULL) {
             assert(tmp->getCurrentNodeId() == it->getId());
             tmp->printEdge();
-            getNodeById(tmp->getOtherNodeId()).printNode();
+            nodes[id_idx_mp.at(tmp->getOtherNodeId())].printNode();
             tmp = tmp->getNext();
         }
         cout<<"\n"<<"\n";
@@ -465,8 +500,8 @@ void Graph<V,E>::BreadthFirstSearch(V& source) {
             other = (V*)&(getNodeById(edge->getOtherNodeId()));
             clr = other->getColor();
             if (clr == V::WHITE) {
-                other->setColor(V::GRAY);
                 other->setDist2Source(other->getDist2Source() + 1);
+                other->setColor(V::GRAY);
                 other->setParent(*node);
                 q.push(other);
             }
@@ -479,13 +514,14 @@ void Graph<V,E>::BreadthFirstSearch(V& source) {
 }
 
 template<class V, class E>
-void Graph<V,E>::depthFirstRoutine(V& node) {
+void Graph<V,E>::depthFirstRoutine(V& node, int component_id) {
     static int count = 0;
     E* edge = node.getEdgeList();
     V* other;
     static map<int, E*> edge_mp;
     node.setEntryTime(count++);
     node.setColor(V::GRAY);
+    node.setComponentId(component_id);
     processOnGrey(node);
     while(edge != NULL) {
         int edge_id = edge->getId();
@@ -523,7 +559,7 @@ void Graph<V,E>::depthFirstRoutine(V& node) {
 
         if (clr == V::WHITE) {
             other->setParent(node);
-            depthFirstRoutine(*other);
+            depthFirstRoutine(*other, component_id);
         }
         edge = edge->getNext();
     }
@@ -535,10 +571,10 @@ void Graph<V,E>::depthFirstRoutine(V& node) {
 
 template<class V, class E>
 void Graph<V,E>::depthFirstSearch() {
-    static int count = 0;
+    int component_id = 0;
     for (iterator it = begin(); it != end(); it++) {
         if (it->getColor() == V::WHITE)
-            depthFirstRoutine(*it);
+            depthFirstRoutine(*it, component_id++);
     }
 }
 
@@ -560,6 +596,7 @@ bool Graph<V,E>::isCyclic() {
 
 template<class V, class E>
 void Graph<V,E>::topsort() {
+
     // Do depth first search to calculate exit Time.
     depthFirstSearch();
 
@@ -574,7 +611,6 @@ void Graph<V,E>::topsort() {
 
     // Indexes have changed so reset edge map
     // and reset adj values.
-    id_idx_mp.clear();
     int i = 0;
     for (iterator it = begin(); it != end(); it++) {
         it->setAdjecencyIndex(i++);
@@ -591,7 +627,7 @@ void Graph<V,E>::topsort() {
 }
 
 template<class V, class E>
-bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
+bool Graph<V, E>::operator ==(const Graph<V,E>& graph) {
     if (getNodeCount() != graph.getNodeCount()) {
         return false;
     }
@@ -600,7 +636,7 @@ bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
         return false;
     }
 
-    for(iterator it = graph.begin(); it != graph.end(); it++) {
+    for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
 
         if (id_idx_mp.find(it->getId()) == id_idx_mp.end()) {
             return false;
@@ -630,12 +666,12 @@ bool Graph<V, E>::operator ==(Graph<V,E>& graph) {
 }
 
 template<class V, class E>
-Graph<V,E>::Graph(Graph<V,E>& graph) {
+Graph<V,E>::Graph(const Graph<V,E>& graph) {
     directed = graph.isDirected();
     weighted = graph.isWeighted();
     labelled = graph.isLabelled();
     nEdges = 0;
-    for(iterator it = graph.begin(); it != graph.end(); it++) {
+    for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
          V node(*it);
          // Copy constructor copies everything
          // All you need in new graph is user inputted data and id
@@ -651,7 +687,7 @@ Graph<V,E>::Graph(Graph<V,E>& graph) {
     assert(graph.getNodeCount() == getNodeCount());
 
     // Copying edges
-    for(iterator it = graph.begin(); it != graph.end(); it++) {
+    for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
         E* tmp = it->getEdgeList();
         while(tmp != NULL) {
             createEdge( getNodeById(tmp->getCurrentNodeId()),
@@ -664,12 +700,12 @@ Graph<V,E>::Graph(Graph<V,E>& graph) {
 
 // Totally same as above.
 template<class V, class E>
-Graph<V,E>& Graph<V,E>::operator =(Graph<V,E>& graph) {
+Graph<V,E>& Graph<V,E>::operator =(const Graph<V,E>& graph) {
     directed = graph.isDirected();
     weighted = graph.isWeighted();
     labelled = graph.isLabelled();
     nEdges = 0;
-    for(iterator it = graph.begin(); it != graph.end(); it++) {
+    for(const_iterator it = graph.const_begin(); it != graph.const_end(); it++) {
          V node(*it);
          node.reset(V::HARD_RESET);
          insertNode(node);
@@ -693,6 +729,9 @@ void Graph<V,E>::deleteEdge(E* edge) {
     V& currNode = (V&)getNodeById(edge->getCurrentNodeId());
     V& otherNode = (V&)getNodeById(edge->getOtherNodeId());
     E* edge_list = currNode.getEdgeList();
+
+    //assert(edge_list != NULL);
+
     if (edge == edge_list) {
         currNode.setEdgeList(edge->getNext());
     } else if (edge->getNext() != NULL) {
@@ -752,4 +791,62 @@ void Graph<V,E>::transpose() {
     }
 }
 
+template<class V, class E>
+typename Graph<V,E>::ComponentGraph& Graph<V,E>::stronglyConnectedComponents() {
+
+    ComponentGraph* comp_graph = new ComponentGraph(10, isDirected(), isWeighted(), isLabelled());
+    queue<V*> q;
+    // top sort to run depth first search
+    // and order entries according to exit time.
+    topsort();
+
+    // not calling reset because coz other field too might be populated
+    for (iterator it = begin(); it != end(); it++) {
+        it->setColor(V::WHITE);
+        it->setComponentId(-1);
+    }
+    transpose();
+    typename vector<V>::reverse_iterator rit;
+    int components = 0;
+    for (rit = nodes.rbegin(); rit != nodes.rend(); rit++) {
+        if (rit->getColor() == V::WHITE) {
+            depthFirstRoutine(*rit, components++);
+            q.push(&(*rit));
+        }
+    }
+
+    // To revert back to original configuration
+    transpose();
+    // not calling reset because coz other field too might be populated
+    for (iterator it = begin(); it != end(); it++) {
+        it->setColor(V::WHITE);
+    }
+    /*
+    while (!q.empty()){
+        V* nodeP = q.front();
+        q.pop();
+        int component_id = nodeP->getComponentId();
+        Graph<V,E>& graph = comp_graph->getGraphForComponentId(component_id);
+
+        E* edge = nodeP->getEdgeList();
+        while(edge != NULL) {
+            assert(nodeP->getId() == edge->getCurrentNodeId());
+
+            V& node2 = getNodeById(edge->getOtherNodeId());
+            if (node2.getColor() == V::WHITE) {
+                node2.setColor(V::GRAY);
+                q.push(&node2);
+                graph.insertNode(node2);
+            }
+            if (component_id == node2.getComponentId()) {
+                graph.createEdge(*nodeP, node2, edge->getWeight());
+            } else {
+                comp_graph->addEdge(*edge);
+            }
+        }
+        nodeP->setColor(V::BLACK);
+    }
+    */
+    return *comp_graph;
+}
 #endif

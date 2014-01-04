@@ -37,7 +37,7 @@ class Node {
         // Prints the value of node
         // User can add more values by subclassing
         // Again in default mode should print what is exposed by getters
-        virtual void printNode();
+        virtual void printNode() const;
 
 
         // Class must expose getters for only those
@@ -80,6 +80,7 @@ class Node {
         // Populated while DFS
         int entry_index;    // Global Count of nodes processed, when encountered
         int exit_index;     // Global count of nodes when blackened.
+        int component_id;
 
         // Spanning Tree Related
         bool in_tree;
@@ -132,6 +133,8 @@ class Node {
         void setInTree(bool in_tree) {this->in_tree = in_tree;}
         bool isInTree() const {return in_tree;}
 
+        int getComponentId() const {return component_id;}
+        void setComponentId(int componenet_id) {this->component_id = component_id;}
         friend ostream& operator <<(ostream& os, const Node& node);
         template<class V, class E> friend class Graph;
         friend class TestNode;
@@ -165,6 +168,7 @@ Node<T>::Node(T& val, string lbl):
     // DFS specific
     entry_index(-1),
     exit_index(-1),
+    component_id(-1),
 
     // Spanning Tree Related
     in_tree(false) {}
@@ -187,6 +191,7 @@ void Node<T>::reset(RESET reset) {
     // DFS specific
     entry_index = -1;
     exit_index = -1;
+    component_id = -1;
 
     // Spanning Tree Related
     bool in_tree = false;
@@ -213,6 +218,7 @@ Node<T>::Node(T& val):
     // DFS specific
     entry_index(-1),
     exit_index(-1),
+    component_id(-1),
 
     // Spanning Tree Related
     in_tree(false) {}
@@ -238,6 +244,7 @@ Node<T>::Node(const Node<T>& node):
     // DFS specific
     entry_index(node.getEntryTime()),
     exit_index(node.getExitTime()),
+    component_id(node.getComponentId()),
 
     // Spanning Tree Related
     in_tree(node.isInTree()) {}
@@ -284,13 +291,14 @@ Node<T>& Node<T>::operator =(const Node<T>& node) {
     // DFS specific
     entry_index = node.getEntryTime();
     exit_index = node.getExitTime();
+    component_id = node.getComponentId();
 
     // Spanning Tree Related
     in_tree = node.isInTree();
     return *this;
 }
 template<typename T>
-void Node<T>::printNode() {
+void Node<T>::printNode() const {
     cout << "(" << getId() << ", ";
     if (this->getLabel().length() > 0)
         cout << getLabel() << ", ";

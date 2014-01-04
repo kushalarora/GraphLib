@@ -151,7 +151,7 @@ class TestGraph {
 
         void testTopsort() {
 
-            Node<int>* nodeArr[100];
+            Node<int>* nodeArr[10];
 
             for (int i = 0; i < 100; i++) {
                 nodeArr[i] = new Node<int>(i);
@@ -161,14 +161,14 @@ class TestGraph {
 
             TGraph *g = new Graph < Node<int>, Edge >(true, true, true);
 
-            g->createRandomGraph(100, 0.5, true, nodeArr);
-
+            g->createRandomGraph(10, 0.5, true, nodeArr);
             g->topsort();
-
+            cout<<endl;
             TGraph::iterator it;
             for (it = g->begin(); it != g->end() - 1; it++) {
                 ASSERT(TGraph::compareExitTimeInc(*it, *(it + 1)), "Top sort should sort in inc order of exit time");
             }
+
             cout << "testTopsort Done!" << endl;
         }
 
@@ -235,12 +235,41 @@ class TestGraph {
             std::cout << "testTransposeDirected Done!"<<endl;
         }
 
+        void testStronglyConnectedComponent() {
+
+            TGraph* g = new Graph< Node<int>, Edge >(true, true, true);
+            Node<int>* nodeArr[10];
+
+            for (int i = 0; i < 10; i++) {
+                nodeArr[i] = new Node<int>(i);
+                nodeArr[i]->populateNode(true);
+            }
+
+
+            g->createRandomGraph(10, 0.5, true, nodeArr);
+            Graph< Node<int>, Edge >  g2 = *g;
+            g->printGraph();
+            cout << endl << endl;
+            TGraph::ComponentGraph comp_graph =  g->stronglyConnectedComponents();
+
+            g->printGraph();
+            cout << endl;
+            // doing this to take care of cross edges between strongly connected components.
+            //g->transpose();
+            //vector<Node<int>*>::iterator it;
+
+            // for (it = vec.begin(); it != vec.end(); it++) {
+
+//            }
+            cout << "testStronglyConnectedComponent Done!"<<endl;
+        }
 /*
         */
 };
 
 int main() {
     TestGraph test;
+    /*
     test.testEmpty();
     test.testInsertNode();
     test.testCreateUndirectedEdge();
@@ -250,7 +279,7 @@ int main() {
     test.testReset(TestGraph::TGraph::HARD_RESET);
     test.testTransposeDirected();
     test.testTopsort();
-    /*
     */
+    test.testStronglyConnectedComponent();
     return 0;
 }
