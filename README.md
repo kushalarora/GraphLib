@@ -144,5 +144,67 @@ void printEdge();
         // Does a Depth First Search  
         void depthFirstSearch();  
         //  Breaks down a graph into multiple strongly connected graphs.
-        ComponentGraph& stronglyConnectedComponents();
+        ComponentGraph& stronglyConnectedComponents;
   ```
+
+###Component Graph
+Component is a graph of strongly connected graphs and edges between nodes belonging to different strongly connected component. It provides two iterators namely `graph_iterator` to iterate over strongly connected graphs and `edge_iterator` to iterate over cross edges between two strongly connected graphs.
+
+```cpp
+   
+   ComponentGraph comp_graph = graph.getStronglyConnectedComponents();
+
+   ComponentGraph::graph_iterator it;
+   int component_no = 0;
+   for (it = comp_graph.graph_begin(); it != comp_graph.end(); it++) {
+        std::cout << "Component Number: " << component_no++ << endl;
+        it->printGraph();
+   }
+```
+
+##Extending GraphLib
+Along with simplicity, the objective is to achieve extensibility too. For this GraphLib allows you to extend each one of `Node`, `Edge` and `Graph` class.
+
+Simplest reason to extend `Graph` class will be to do specific task in `breadthFirstSearch` and `depthFirstRoutine`. This can be done by overriding `processOnGray(node)`, `processOnBlack(node)` and/or `processEdge(edge)` functions which are called when node is encountered, node is completely processed and when an edge is processed respectively.
+```cpp
+class NewGraph : public Graph<Data> {
+    virtual void processOnGrey(Node<Data>& node) {
+        node.printNode();
+    }
+    public:
+        NewGraph(bool is_directed) :
+            Graph(is_directed) {};
+        NewGraph():Graph() {};
+};
+```
+
+Base class for `Graph` is `BaseGraph`. `BaseGraph` is a templated class with `Node` and `Edge` being its template arguments. The constructor of `BaseGraph` class are protected to prevent instantiation of this class. 
+
+To accomplish a task like adding new member and interfaces to this member to a `Node`. Just extend the `Node` class. 
+
+To ensure that graph operations takes place on new `Node` class,  extend `BaseGraph` class making the constructor of this new class as public. Example of this use case is shown below.
+```cpp
+class TBFSNode : public Node<int> {
+    private:
+        bool in_tree;
+        void setInTree(bool in_tree) {this->in_tree = in_tree;}
+    public:
+        TBFSNode(int& val) : Node(val), in_tree(false){}
+        TBFSNode(int& val, string label) : Node(val, label), in_tree(false){}
+        TBFSNode(const TBFSNode& node) : Node(node), in_tree(node.in_tree){}
+        friend class TBFSGraph;
+        bool inTree() {return in_tree;}
+};
+
+
+
+class TBFSGraph : public GraphBase<TBFSNode, Edge > {
+    virtual void processOnGrey(TBFSNode& node) {
+        node.setInTree(true);
+    }
+    public:
+        TBFSGraph(bool is_directed) :
+            GraphBase(is_directed) {};
+        TBFSGraph():GraphBase() {};
+};
+```
