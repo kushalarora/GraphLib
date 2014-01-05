@@ -125,9 +125,11 @@ void printEdge();
      This can be called by calling `graph.reset()`. This removes all the state data keeping the structure of graph i.e. nodes and edges intact.
 
  2. Hard Reset
+
     This is called using interface `graph.reset(Graph::HARD_RESET)`. The removes all edges and nodes and gives you a clean graph to start again.
 
 6. Algorithms
+
    As of now following algorithms are implemented. The list will keep growing till most of the important and well known algorithms are covered.
 
   ```cpp
